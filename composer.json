@@ -38,5 +38,5 @@
     "issues": "https://github.com/banelsems/laraSgmefQr/issues"
   },
   "minimum-stability": "dev",
-  "prefer-stable": true,
+  "prefer-stable": true
 }
