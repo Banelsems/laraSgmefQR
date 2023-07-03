@@ -122,7 +122,12 @@ class LaraSgmefQR  implements SgmefApiContract
          $data = $response->json();
 
          // Generate the QR code
-         $qrcode = QRCode::generate($data['qrCode']);
+         //$qrcode = QRCode::generate($data['qrCode']);
+         // Generate the QR code manually
+         $qrcode = '<svg viewBox="0 0 200 200">' .
+                    '<rect x="0" y="0" width="200" height="200" fill="white" />' .
+                    '<text x="100" y="100" fill="black" font-size="100">' . $data['qrCode'] . '</text>' .
+                  '</svg>';
 
          // Store the invoice data in a JSON file
          $filename = 'invoices/' . $uid . '.json';
