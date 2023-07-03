@@ -1,26 +1,42 @@
-"name": "banelsems/laraSgmefQR",
-    "description": "Package for integrating with the SGMEF API Benin and generating QR codes in Laravel",
-    "type": "library",
-    "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "Banelsems\\LaraSgmefQr\\": "src/"
-        }
-    },
-    "authors": [
-        {
-            "name": "SEMASSOUSSI Banel Fajardy",
-            "email": "banelsemassoussi@gmail.com"
-        }
-    ],
-    "require": {
-        "barryvdh/laravel-qrcode": "^4.2",
-        "php": "^7.4",
-        "laravel": "^8.0"
-    },
-    "require-dev": {
-    },
-    "publish": [
-        "config/laraSgmefQR.php",
-        "resources/views/invoiceNormalize.blade.php"
-    ]
+{
+  "name": "laraSgmefQr",
+  "description": "Package for integrating with the SGMEF API Benin and generating QR codes in Laravel.",
+  "keywords": [
+    "laravel",
+    "qrcode",
+    "benin",
+    "sgmef",
+    "invoiceNormalize"
+  ],
+  "homepage": "https://github.com/banelsems/laraSgmefQr",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Banelsems\\LaraSgmefQr\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "SEMASSOUSSI Banel Fajardy",
+      "email": "banelsemassoussi@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "barryvdh/laravel-qrcode": "^4.2",
+    "php": "^7.4",
+    "laravel": "^8.0"
+  },
+  "require-dev": [],
+  "publish": [
+    "config/laraSgmefQR.php",
+    "resources/views/invoiceNormalize.blade.php"
+  ],
+  "support": {
+    "forum": "https://laraSgmefQr.discussion.group",
+    "issues": "https://github.com/banelsems/laraSgmefQr/issues"
+  },
+  "stability": "stable",
+  "version": "1.0.0"
+}
