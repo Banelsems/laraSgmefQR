@@ -20,32 +20,25 @@
     {
       "name": "SEMASSOUSSI Banel Fajardy",
       "email": "banelsemassoussi@gmail.com",
-      "homepage":"https://banelsems.com",
+      "homepage": "https://banelsems.com",
       "role": "Developer"
     }
   ],
-  "require": [],
-  "require-dev": [],
   "extra": {
-      "laravel": {
-        "providers": [
-          "Banelsems\\LaraSgmefQr\\Provider"
-        ],
-        "aliases": {
-          "LaraSgmefQr": "Banelsems\\LaraSgmefQr\\"
-        }
+    "laravel": {
+      "providers": [
+        "Banelsems\\LaraSgmefQr\\Provider"
+      ],
+      "aliases": {
+        "LaraSgmefQr": "Banelsems\\LaraSgmefQr\\"
       }
-   },
-  "publish": [
-    "config/laraSgmefQR.php",
-    "resources/views/invoiceNormalize.blade.php"
-  ],
+    }
+  },
   "support": {
     "forum": "https://laraSgmefQr.discussion.group",
     "issues": "https://github.com/banelsems/laraSgmefQr/issues"
   },
   "version": "1.0.0",
   "stability": "stable",
-  "minimum-stability": "dev",
   "prefer-stable": true
 }
