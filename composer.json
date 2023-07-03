@@ -15,6 +15,7 @@
         }
     ],
     "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
         "barryvdh/laravel-qrcode": "^4.2"
     }
