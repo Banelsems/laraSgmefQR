@@ -7,7 +7,7 @@ LaraSgmefQR is a Laravel package that provides a way to normalize invoice data f
 To install LaraSgmefQR, you can run the following command:
 
 ```
-composer require banelsems/laraSgmefQR
+composer require banelsems/lara-sgmef-qr
 ```
 
 ## Usage
