@@ -24,9 +24,7 @@
       "role": "Developer"
     }
   ],
-  "require": {
-    "banelsems/lara-sgmef-qr": "^1.0"
-  },
+  "require": {},
   "require-dev": [],
   "extra": {
     "laravel": {
