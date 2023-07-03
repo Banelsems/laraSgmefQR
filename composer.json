@@ -1,5 +1,4 @@
-{
-    "name": "banelsems/laraSgmefQR",
+"name": "banelsems/laraSgmefQR",
     "description": "Package for integrating with the SGMEF API Benin and generating QR codes in Laravel",
     "type": "library",
     "license": "MIT",
@@ -17,6 +16,15 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "barryvdh/laravel-qrcode": "^4.2"
-    }
-}
+        "barryvdh/laravel-qrcode": "^4.2",
+        "php": "^7.4",
+        "laravel": "^8.0"
+    },
+    "require-dev": {
+        "phpunit": "^9.5",
+        "mockery": "^1.4"
+    },
+    "publish": [
+        "config/laraSgmefQR.php",
+        "resources/views/invoiceNormalize.blade.php"
+    ]
