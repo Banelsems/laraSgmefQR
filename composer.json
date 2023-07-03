@@ -13,16 +13,12 @@
             "email": "banelsemassoussi@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "require": {
         "barryvdh/laravel-qrcode": "^4.2",
         "php": "^7.4",
         "laravel": "^8.0"
     },
     "require-dev": {
-        "phpunit": "^9.5",
-        "mockery": "^1.4"
     },
     "publish": [
         "config/laraSgmefQR.php",
