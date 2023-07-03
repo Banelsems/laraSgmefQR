@@ -20,11 +20,13 @@
     {
       "name": "SEMASSOUSSI Banel Fajardy",
       "email": "banelsemassoussi@gmail.com",
-      "homepage":"https://banelsems.com",
+      "homepage": "https://banelsems.com",
       "role": "Developer"
     }
   ],
-  "require": {},
+  "require": {
+    "banelsems/lara-sgmef-qr": "^1.0"
+  },
   "require-dev": [],
   "extra": {
     "laravel": {
