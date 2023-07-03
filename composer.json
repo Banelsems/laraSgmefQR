@@ -37,5 +37,6 @@
     "forum": "https://laraSgmefQr.discussion.group",
     "issues": "https://github.com/banelsems/laraSgmefQr/issues"
   },
-  "minimum-stability": "stable",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
 }
