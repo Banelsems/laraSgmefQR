@@ -24,11 +24,7 @@
       "role": "Developer"
     }
   ],
-  "require": {
-    "php": ">=8.0.0",
-    "laravel": "^8.0",
-    "illuminate/support": ">=8.0"
-  },
+  "require": [],
   "require-dev": [],
   "extra": {
       "laravel": {
