@@ -6,7 +6,11 @@
     "qrcode",
     "benin",
     "sgmef",
-    "invoiceNormalize"
+    "invoiceNormalize",
+    "invoice",
+    "API",
+    "integration",
+    "e-commerce"
   ],
   "homepage": "https://github.com/banelsems/laraSgmefQr",
   "type": "library",
@@ -34,11 +38,15 @@
       }
     }
   },
+  "publish": [
+    "config/laraSgmefQR.php",
+    "resources/views/invoiceNormalize.blade.php"
+  ],
   "support": {
     "forum": "https://laraSgmefQr.discussion.group",
     "issues": "https://github.com/banelsems/laraSgmefQr/issues"
   },
   "version": "1.0.0",
-  "stability": "stable",
+  "minimum-stability": "alpha",
   "prefer-stable": true
 }
