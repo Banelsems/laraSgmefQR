@@ -6,11 +6,7 @@
     "qrcode",
     "benin",
     "sgmef",
-    "invoiceNormalize",
-    "invoice",
-    "API",
-    "integration",
-    "e-commerce"
+    "invoiceNormalize"
   ],
   "homepage": "https://github.com/banelsems/laraSgmefQr",
   "type": "library",
@@ -24,10 +20,14 @@
     {
       "name": "SEMASSOUSSI Banel Fajardy",
       "email": "banelsemassoussi@gmail.com",
-      "homepage": "https://banelsems.com",
+      "homepage":"https://banelsems.com",
       "role": "Developer"
     }
   ],
+  "require": {
+    "banelsems/lara-sgmef-qr": "^1.0"
+  },
+  "require-dev": [],
   "extra": {
     "laravel": {
       "providers": [
@@ -47,6 +47,7 @@
     "issues": "https://github.com/banelsems/laraSgmefQr/issues"
   },
   "version": "1.0.0",
-  "minimum-stability": "alpha",
+  "stability": "stable",
+  "minimum-stability": "dev",
   "prefer-stable": true
 }
