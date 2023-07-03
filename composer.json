@@ -20,14 +20,17 @@
     {
       "name": "SEMASSOUSSI Banel Fajardy",
       "email": "banelsemassoussi@gmail.com",
+      "homepage":"https://banelsems.com",
       "role": "Developer"
     }
   ],
   "require": {
     "barryvdh/laravel-qrcode": "^4.2",
-    "php": "^7.4",
-    "laravel": "^8.0"
+    "php": ">=8.0.0",
+    "laravel": "^8.0",
+    "illuminate/support": ">=8.0"
   },
+  
   "require-dev": [],
   "publish": [
     "config/laraSgmefQR.php",
@@ -39,4 +42,20 @@
   },
   "minimum-stability": "dev",
   "prefer-stable": true
+}
+
+
+
+{
+    
+    "extra": {
+      "laravel": {
+        "providers": [
+          "\\Ladumor\\LaravelPwa\\PWAServiceProvider"
+        ],
+        "aliases": {
+          "LaravelPwa": "Ladumor\\LaravelPwa\\LaravelPwa"
+        }
+      }
+    }
 }
