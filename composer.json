@@ -27,11 +27,6 @@
   "require": {
     "php": ">=7.2"
   },
-  "autoload-dev": {
-    "psr-4": {
-      "Banelsems\\LaraSgmefQr\\Tests\\": "tests/"
-    }
-  },
   "extra": {
     "laravel": {
       "providers": [
