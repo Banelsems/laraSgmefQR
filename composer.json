@@ -9,7 +9,6 @@
     "invoiceNormalize"
   ],
   "homepage": "https://github.com/banelsems/lara-sgmef-qr",
-  "type": "library",
   "license": "MIT",
   "autoload": {
     "psr-4": {
@@ -24,17 +23,11 @@
       "role": "Developer"
     }
   ],
-  "require": {
-    "php": ">=7.2"
-  },
   "extra": {
     "laravel": {
       "providers": [
         "Banelsems\\LaraSgmefQr\\Provider"
-      ],
-      "aliases": {
-        "LaraSgmefQr": "Banelsems\\LaraSgmefQr\\Facade"
-      }
+      ]
     }
   },
   "publish": [
