@@ -1,20 +1,24 @@
 <?php
 
-namespace App\Contracts;
+namespace banelsems\LaraSgmefQR\src\Contracts;
 
 interface SgmefApiContract
 {
-    public function getStatuses();
+    public function getInvoiceStatuses();
 
-    public function getTaxGroups();
+    public function getInvoiceTypeList();
 
-    public function getInvoiceTypes();
-
-    public function getPaymentTypes();
+    public function getPaymentTypeList();
 
     public function createInvoice(array $data);
 
-    public function getInvoice($uid);
+    public function getInvoice(string $uid);
 
-    public function confirmInvoice($uid);
+    public function confirmInvoice(string $uid);
+
+    public function cancelInvoice(string $uid);
+
+    public function getSupportedCountries();
+
+    public function getInvoiceByUid(string $uid): array;
 }

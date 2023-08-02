@@ -53,7 +53,5 @@
   "support": {
     "forum": "https://lara-sgmef-qr.discussion.group",
     "issues": "https://github.com/banelsems/lara-sgmef-qr/issues"
-  },
-  "version": "1.0.0",
-  "stability": "stable"
+  }
 }
