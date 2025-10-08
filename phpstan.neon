@@ -1,0 +1,23 @@
+parameters:
+    level: 8
+    paths:
+        - src
+    
+    excludePaths:
+        - src/Tests/*
+        - src/database/migrations/*
+    
+    ignoreErrors:
+        - '#Call to an undefined method Illuminate\\.*#'
+        - '#Access to an undefined property Illuminate\\.*#'
+        - '#Class Illuminate\\.*not found#'
+        - '#Function config not found#'
+        - '#Function now not found#'
+        - '#Function view not found#'
+        - '#Function route not found#'
+        - '#Function back not found#'
+        - '#Function redirect not found#'
+        - '#Function app not found#'
+    
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false

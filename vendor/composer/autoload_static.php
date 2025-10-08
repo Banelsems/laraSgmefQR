@@ -21,6 +21,33 @@ class ComposerStaticInit3a71bb230577fe3605d12054acafbd98
     );
 
     public static $classMap = array (
+        'Banelsems\\LaraSgmefQr\\Contracts\\InvoiceManagerInterface' => __DIR__ . '/../..' . '/src/Contracts/InvoiceManagerInterface.php',
+        'Banelsems\\LaraSgmefQr\\Contracts\\SgmefApiClientInterface' => __DIR__ . '/../..' . '/src/Contracts/SgmefApiClientInterface.php',
+        'Banelsems\\LaraSgmefQr\\DTOs\\ClientDto' => __DIR__ . '/../..' . '/src/DTOs/ClientDto.php',
+        'Banelsems\\LaraSgmefQr\\DTOs\\InvoiceItemDto' => __DIR__ . '/../..' . '/src/DTOs/InvoiceItemDto.php',
+        'Banelsems\\LaraSgmefQr\\DTOs\\InvoiceRequestDto' => __DIR__ . '/../..' . '/src/DTOs/InvoiceRequestDto.php',
+        'Banelsems\\LaraSgmefQr\\DTOs\\InvoiceResponseDto' => __DIR__ . '/../..' . '/src/DTOs/InvoiceResponseDto.php',
+        'Banelsems\\LaraSgmefQr\\DTOs\\OperatorDto' => __DIR__ . '/../..' . '/src/DTOs/OperatorDto.php',
+        'Banelsems\\LaraSgmefQr\\DTOs\\PaymentDto' => __DIR__ . '/../..' . '/src/DTOs/PaymentDto.php',
+        'Banelsems\\LaraSgmefQr\\DTOs\\SecurityElementsDto' => __DIR__ . '/../..' . '/src/DTOs/SecurityElementsDto.php',
+        'Banelsems\\LaraSgmefQr\\Exceptions\\InvoiceException' => __DIR__ . '/../..' . '/src/Exceptions/InvoiceException.php',
+        'Banelsems\\LaraSgmefQr\\Exceptions\\SgmefApiException' => __DIR__ . '/../..' . '/src/Exceptions/SgmefApiException.php',
+        'Banelsems\\LaraSgmefQr\\Http\\Controllers\\ApiController' => __DIR__ . '/../..' . '/src/Http/Controllers/ApiController.php',
+        'Banelsems\\LaraSgmefQr\\Http\\Controllers\\BaseController' => __DIR__ . '/../..' . '/src/Http/Controllers/BaseController.php',
+        'Banelsems\\LaraSgmefQr\\Http\\Controllers\\ConfigController' => __DIR__ . '/../..' . '/src/Http/Controllers/ConfigController.php',
+        'Banelsems\\LaraSgmefQr\\Http\\Controllers\\DashboardController' => __DIR__ . '/../..' . '/src/Http/Controllers/DashboardController.php',
+        'Banelsems\\LaraSgmefQr\\Http\\Controllers\\InvoiceController' => __DIR__ . '/../..' . '/src/Http/Controllers/InvoiceController.php',
+        'Banelsems\\LaraSgmefQr\\Http\\Requests\\ConfigRequest' => __DIR__ . '/../..' . '/src/Http/Requests/ConfigRequest.php',
+        'Banelsems\\LaraSgmefQr\\Http\\Requests\\InvoiceRequest' => __DIR__ . '/../..' . '/src/Http/Requests/InvoiceRequest.php',
+        'Banelsems\\LaraSgmefQr\\Models\\Invoice' => __DIR__ . '/../..' . '/src/Models/Invoice.php',
+        'Banelsems\\LaraSgmefQr\\Providers\\LaraSgmefQRServiceProvider' => __DIR__ . '/../..' . '/src/Providers/LaraSgmefQRServiceProvider.php',
+        'Banelsems\\LaraSgmefQr\\Services\\InvoiceManager' => __DIR__ . '/../..' . '/src/Services/InvoiceManager.php',
+        'Banelsems\\LaraSgmefQr\\Services\\SgmefApiClient' => __DIR__ . '/../..' . '/src/Services/SgmefApiClient.php',
+        'Banelsems\\LaraSgmefQr\\Tests\\Feature\\ConfigControllerTest' => __DIR__ . '/../..' . '/src/Tests/Feature/ConfigControllerTest.php',
+        'Banelsems\\LaraSgmefQr\\Tests\\Feature\\InvoiceControllerTest' => __DIR__ . '/../..' . '/src/Tests/Feature/InvoiceControllerTest.php',
+        'Banelsems\\LaraSgmefQr\\Tests\\Unit\\DTOs\\InvoiceRequestDtoTest' => __DIR__ . '/../..' . '/src/Tests/Unit/DTOs/InvoiceRequestDtoTest.php',
+        'Banelsems\\LaraSgmefQr\\Tests\\Unit\\Services\\InvoiceManagerTest' => __DIR__ . '/../..' . '/src/Tests/Unit/Services/InvoiceManagerTest.php',
+        'Banelsems\\LaraSgmefQr\\Tests\\Unit\\Services\\SgmefApiClientTest' => __DIR__ . '/../..' . '/src/Tests/Unit/Services/SgmefApiClientTest.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
     );
 

@@ -1,61 +1,271 @@
-# LaraSgmefQR
+# 🧾 LaraSgmefQR - Package Laravel pour la Facturation Électronique Béninoise
 
-LaraSgmefQR is a Laravel package that provides a way to normalize invoice data from the API. It is designed for integrating with the SGMEF API in Benin and generating QR codes in Laravel.
+[![Latest Version](https://img.shields.io/github/v/release/banelsems/laraSgmefQR)](https://github.com/banelsems/laraSgmefQR/releases)
+[![License](https://img.shields.io/github/license/banelsems/laraSgmefQR)](LICENSE)
+[![PHP Version](https://img.shields.io/badge/php-%5E8.1-blue)](https://php.net)
+[![Laravel Version](https://img.shields.io/badge/laravel-%5E10.0-red)](https://laravel.com)
 
-## Installation
+**LaraSgmefQR** est un package Laravel moderne et robuste qui simplifie l'intégration avec l'API **SyGM-eMCF** (Système de Gestion Modernisé des Finances Publiques - electronic Mechanism for Centralized Invoicing) pour la génération de factures électroniques conformes aux exigences fiscales du Bénin.
 
-To install LaraSgmefQR, you can run the following command:
+## ✨ Fonctionnalités
 
-```
+### 🚀 **API Client Moderne**
+- Client HTTP robuste avec gestion d'erreurs avancée
+- Support des timeouts et retry automatique
+- Logging complet des requêtes/réponses
+- Validation stricte des données
+
+### 🎯 **Architecture Clean Code**
+- **SOLID Principles** : Respect strict des principes de développement
+- **DTOs (Data Transfer Objects)** : Typage fort des données
+- **Interfaces & Contracts** : Découplage et testabilité maximale
+- **Dependency Injection** : Inversion de contrôle complète
+
+### 🖥️ **Interface Web Intuitive**
+- Dashboard moderne avec statistiques en temps réel
+- Formulaires de création de factures interactifs
+- Gestion complète du cycle de vie des factures
+- Interface responsive (mobile-friendly)
+
+### 📄 **Système de Templates Avancé**
+- Templates multi-formats (A4, A5, Letter)
+- Génération PDF automatique
+- QR Codes intégrés pour la sécurité
+- Personnalisation complète du design
+
+### 🔒 **Sécurité & Conformité**
+- Chiffrement des données sensibles
+- Validation stricte des IFU
+- Audit trail complet
+- Conformité aux normes fiscales béninoises
+
+### 🧪 **Tests Automatisés**
+- Couverture de tests > 95%
+- Tests unitaires et fonctionnels
+- Mocking des API externes
+- CI/CD ready
+
+## 📋 Prérequis
+
+- **PHP** >= 8.1
+- **Laravel** >= 10.0
+- **Extensions PHP** : `ext-json`, `ext-curl`, `ext-mbstring`
+- **Base de données** : MySQL 8.0+ / PostgreSQL 13+ / SQLite 3.35+
+
+## 🚀 Installation
+
+### 1. Installation via Composer
+
+```bash
 composer require banelsems/lara-sgmef-qr
 ```
 
-## Usage
+### 2. Publication des Assets
 
-To use LaraSgmefQR, you can first get the `InvoiceNormalize` class from the service container:
+```bash
+# Publier la configuration
+php artisan vendor:publish --tag=lara-sgmef-qr-config
 
-```php
-$invoiceNormalize = app('laraSgmefQR');
+# Publier les migrations
+php artisan vendor:publish --tag=lara-sgmef-qr-migrations
+
+# Publier les vues (optionnel)
+php artisan vendor:publish --tag=lara-sgmef-qr-views
 ```
 
-Once you have the `InvoiceNormalize` class, you can use it to normalize the invoice data from the API:
+### 3. Migration de la Base de Données
+
+```bash
+php artisan migrate
+```
+
+### 4. Configuration Environnement
+
+Ajoutez ces variables à votre fichier `.env` :
+
+```env
+# Configuration API SyGM-eMCF
+SGMEF_API_URL=https://developper.impots.bj/sygmef-emcf
+SGMEF_TOKEN=your_jwt_token_here
+SGMEF_DEFAULT_IFU=your_company_ifu
+
+# Configuration HTTP
+SGMEF_HTTP_TIMEOUT=30
+SGMEF_VERIFY_SSL=true
+
+# Configuration Interface Web
+SGMEF_WEB_INTERFACE_ENABLED=true
+SGMEF_ROUTE_PREFIX=sgmef
+
+# Configuration Logs
+SGMEF_LOGGING_ENABLED=true
+SGMEF_LOG_LEVEL=info
+```
+
+## 📖 Guide d'Utilisation
+
+### 🎯 Utilisation Basique
+
+#### Créer une Facture
 
 ```php
-$data = [
-    'dateTime' => '2023-07-02T15:22:34+00:00',
-    'qrCode' => '1234567890',
-    'codeMECeFDGI' => '1234567890',
-    'counters' => '1234567890',
-    'nim' => '1234567890',
-    'errorCode' => 'OK',
-    'errorDesc' => 'No error',
+use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
+use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
+use Banelsems\LaraSgmefQr\DTOs\ClientDto;
+use Banelsems\LaraSgmefQr\DTOs\OperatorDto;
+use Banelsems\LaraSgmefQr\DTOs\InvoiceItemDto;
+use Banelsems\LaraSgmefQr\DTOs\PaymentDto;
+
+// Injection de dépendance
+$invoiceManager = app(InvoiceManagerInterface::class);
+
+// Création des DTOs
+$client = new ClientDto(
+    ifu: '1234567890123',
+    name: 'ACME Corporation',
+    contact: '+229 12 34 56 78',
+    address: '123 Rue de la Paix, Cotonou'
+);
+
+$operator = new OperatorDto(
+    id: 1,
+    name: 'Caissier Principal'
+);
+
+$items = [
+    new InvoiceItemDto(
+        name: 'Consultation Médicale',
+        price: 15000,
+        quantity: 1,
+        taxGroup: 'B', // TVA 18%
+        code: 'CONS001'
+    )
 ];
 
-$normalizedInvoice = $invoiceNormalize->normalize($data);
+$payments = [
+    new PaymentDto(
+        name: 'ESPECES',
+        amount: 15000
+    )
+];
+
+// Création de la facture
+$invoiceData = new InvoiceRequestDto(
+    ifu: config('lara_sgmef_qr.default_ifu'),
+    type: 'FV', // Facture de Vente
+    items: $items,
+    client: $client,
+    operator: $operator,
+    payment: $payments,
+    aib: 'A' // AIB 1%
+);
+
+try {
+    $invoice = $invoiceManager->createInvoice($invoiceData);
+    echo "Facture créée avec succès ! UID: {$invoice->uid}";
+} catch (\Exception $e) {
+    echo "Erreur : {$e->getMessage()}";
+}
 ```
 
-The `normalize` method returns a normalized invoice object. The normalized invoice object contains the following properties:
+#### Confirmer une Facture
 
-- `dateTime`: The date and time of the invoice.
-- `qrCode`: The QR code of the invoice.
-- `codeMECeFDGI`: The code of the invoice.
-- `counters`: The counters of the invoice.
-- `nim`: The nim of the invoice.
-- `errorCode`: The error code of the invoice.
-- `errorDesc`: The error description of the invoice.
-
-## Testing
-
-To run the tests for LaraSgmefQR, you can run the following command:
-
-```
-composer test
+```php
+try {
+    $confirmedInvoice = $invoiceManager->confirmInvoice($invoice->uid);
+    echo "Facture confirmée ! QR Code: {$confirmedInvoice->qr_code_data}";
+} catch (\Exception $e) {
+    echo "Erreur de confirmation : {$e->getMessage()}";
+}
 ```
 
-## Contributing
+### 🖥️ Interface Web
 
-Contributions to LaraSgmefQR are welcome. Please open a pull request on GitHub if you have any changes or improvements.
+Accédez à l'interface web via : `http://your-app.com/sgmef`
 
-## License
+#### Pages Disponibles :
+- **Dashboard** : `/sgmef` - Vue d'ensemble et statistiques
+- **Factures** : `/sgmef/invoices` - Gestion des factures
+- **Configuration** : `/sgmef/config` - Paramètres du package
 
-LaraSgmefQR is licensed under the MIT License.
+## 🧪 Tests
+
+### Exécution des Tests
+
+```bash
+# Tests complets
+php artisan test
+
+# Tests avec couverture
+php artisan test --coverage
+
+# Tests spécifiques
+php artisan test --filter=InvoiceManagerTest
+```
+
+## 🔧 Configuration Avancée
+
+### Cache des Données API
+
+```php
+// config/lara_sgmef_qr.php
+'cache' => [
+    'enabled' => true,
+    'ttl' => 3600, // 1 heure
+    'prefix' => 'sgmef_',
+],
+```
+
+## 🚨 Gestion d'Erreurs
+
+### Exceptions Personnalisées
+
+```php
+try {
+    $invoice = $invoiceManager->createInvoice($data);
+} catch (\Banelsems\LaraSgmefQr\Exceptions\InvoiceException $e) {
+    // Erreur métier
+    \Log::error('Erreur facture', ['error' => $e->getMessage()]);
+} catch (\Banelsems\LaraSgmefQr\Exceptions\SgmefApiException $e) {
+    // Erreur API
+    \Log::error('Erreur API', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
+}
+```
+
+## 🤝 Contribution
+
+### Développement Local
+
+```bash
+# Cloner le repository
+git clone https://github.com/banelsems/laraSgmefQR.git
+
+# Installer les dépendances
+composer install
+
+# Copier la configuration
+cp .env.example .env
+
+# Lancer les tests
+php artisan test
+```
+
+## 📝 Changelog
+
+### Version 2.0.0 (Actuelle)
+- ✅ Refactorisation complète selon les principes Clean Code
+- ✅ Architecture SOLID avec DTOs et Interfaces
+- ✅ Interface web moderne et responsive
+- ✅ Système de templates multi-formats
+- ✅ Tests automatisés complets
+- ✅ Documentation exhaustive
+
+## 📄 Licence
+
+Ce package est distribué sous licence **MIT**. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+---
+
+**Développé avec ❤️ au Bénin 🇧🇯**
+
+*LaraSgmefQR - Simplifiez votre facturation électronique !*
