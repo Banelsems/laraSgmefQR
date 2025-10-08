@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Providers;
 
 use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
 use Banelsems\LaraSgmefQr\Services\SgmefApiClient;
 use Banelsems\LaraSgmefQr\Services\InvoiceManager;
+use Banelsems\LaraSgmefQr\Support\LaravelVersionHelper;
 use Illuminate\Http\Client\Factory as HttpClient;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;

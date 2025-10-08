@@ -39,17 +39,16 @@
 - Audit trail complet
 - Conformité aux normes fiscales béninoises
 
-### 🧪 **Tests Automatisés**
 - Couverture de tests > 95%
 - Tests unitaires et fonctionnels
 - Mocking des API externes
 - CI/CD ready
 
-## 📋 Prérequis
+## 🔧 **Exigences**
 
-- **PHP** >= 8.1
-- **Laravel** >= 10.0
-- **Extensions PHP** : `ext-json`, `ext-curl`, `ext-mbstring`
+- **PHP** >= 8.1 (compatible 8.1, 8.2, 8.3)
+- **Laravel** >= 10.0 (compatible 10.x, 11.x, 12.x)
+- **Extensions PHP** : `json`, `curl`, `mbstring`
 - **Base de données** : MySQL 8.0+ / PostgreSQL 13+ / SQLite 3.35+
 
 ## 🚀 Installation
