@@ -71,7 +71,17 @@ class InvoiceController extends BaseController
     public function store(InvoiceRequest $request): RedirectResponse
     {
         try {
-            $invoiceData = InvoiceRequestDto::fromArray($request->validated());
+            $validatedData = $request->validated();
+            
+            // S'assurer qu'un opérateur est toujours défini
+            if (empty($validatedData['operator']['name']) || empty($validatedData['operator']['id'])) {
+                $validatedData['operator'] = [
+                    'name' => config('lara_sgmef_qr.default_operator.name', 'Opérateur Principal'),
+                    'id' => config('lara_sgmef_qr.default_operator.id', '1'),
+                ];
+            }
+            
+            $invoiceData = InvoiceRequestDto::fromArray($validatedData);
             $invoice = $this->invoiceManager->createInvoice($invoiceData);
 
             return redirect()
@@ -152,7 +162,17 @@ class InvoiceController extends BaseController
     public function preview(Request $request): JsonResponse
     {
         try {
-            $invoiceData = InvoiceRequestDto::fromArray($request->all());
+            $requestData = $request->all();
+            
+            // S'assurer qu'un opérateur est toujours défini
+            if (empty($requestData['operator']['name']) || empty($requestData['operator']['id'])) {
+                $requestData['operator'] = [
+                    'name' => config('lara_sgmef_qr.default_operator.name', 'Opérateur Principal'),
+                    'id' => config('lara_sgmef_qr.default_operator.id', '1'),
+                ];
+            }
+            
+            $invoiceData = InvoiceRequestDto::fromArray($requestData);
             
             // Validation des données
             $errors = $invoiceData->validate();

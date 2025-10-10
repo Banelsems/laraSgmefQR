@@ -34,9 +34,9 @@ class InvoiceRequest extends FormRequest
             'client.contact' => ['nullable', 'string', 'max:255'],
             'client.address' => ['nullable', 'string', 'max:500'],
             
-            // Opérateur
-            'operator.id' => ['required'],
-            'operator.name' => ['required', 'string', 'max:255'],
+            // Opérateur (optionnel - sera rempli automatiquement si vide)
+            'operator.id' => ['nullable'],
+            'operator.name' => ['nullable', 'string', 'max:255'],
             
             // Articles
             'items' => ['required', 'array', 'min:1'],
@@ -68,8 +68,8 @@ class InvoiceRequest extends FormRequest
             'client.name.required' => 'Le nom du client est requis',
             'client.ifu.regex' => 'L\'IFU du client doit contenir exactement 13 chiffres',
             
-            'operator.id.required' => 'L\'ID de l\'opérateur est requis',
-            'operator.name.required' => 'Le nom de l\'opérateur est requis',
+            'operator.name.string' => 'Le nom de l\'opérateur doit être une chaîne de caractères',
+            'operator.name.max' => 'Le nom de l\'opérateur ne peut pas dépasser 255 caractères',
             
             'items.required' => 'Au moins un article est requis',
             'items.min' => 'Au moins un article est requis',

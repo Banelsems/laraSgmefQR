@@ -7,6 +7,13 @@
 
 **LaraSgmefQR** est un package Laravel moderne et robuste qui simplifie l'intégration avec l'API **SyGM-eMCF** (Système de Gestion Modernisé des Finances Publiques - electronic Mechanism for Centralized Invoicing) pour la génération de factures électroniques conformes aux exigences fiscales du Bénin.
 
+## 🌟 **Nouvelle Version 2.1.0 - Totalement Indépendant de l'Authentification !**
+
+**✅ Fonctionne immédiatement après installation**  
+**✅ Aucun système d'authentification requis**  
+**✅ Compatible avec Laravel UI, Breeze, Jetstream, Fortify ou aucun système d'auth**  
+**✅ Concept d'opérateur pour remplacer la dépendance aux utilisateurs connectés**
+
 ## ✨ Fonctionnalités
 
 ### 🚀 **API Client Moderne**
@@ -26,6 +33,13 @@
 - Formulaires de création de factures interactifs
 - Gestion complète du cycle de vie des factures
 - Interface responsive (mobile-friendly)
+- **Aucune authentification requise** - Fonctionne immédiatement
+
+### 🔓 **Indépendance Totale de l'Authentification**
+- **Concept d'Opérateur** : Remplace la notion d'utilisateur connecté
+- **Configuration par défaut** : Opérateur automatiquement défini
+- **Compatibilité universelle** : Fonctionne avec ou sans système d'auth
+- **Installation immédiate** : Aucune configuration d'authentification nécessaire
 
 ### 📄 **Système de Templates Avancé**
 - Templates multi-formats (A4, A5, Letter)
@@ -88,6 +102,10 @@ SGMEF_API_URL=https://developper.impots.bj/sygmef-emcf
 SGMEF_TOKEN=your_jwt_token_here
 SGMEF_DEFAULT_IFU=your_company_ifu
 
+# Configuration Opérateur par Défaut (NOUVEAU)
+SGMEF_DEFAULT_OPERATOR_NAME="Opérateur Principal"
+SGMEF_DEFAULT_OPERATOR_ID=1
+
 # Configuration HTTP
 SGMEF_HTTP_TIMEOUT=30
 SGMEF_VERIFY_SSL=true
@@ -126,9 +144,10 @@ $client = new ClientDto(
     address: '123 Rue de la Paix, Cotonou'
 );
 
+// Opérateur - Utilise automatiquement la configuration par défaut si non spécifié
 $operator = new OperatorDto(
-    id: 1,
-    name: 'Caissier Principal'
+    id: config('lara_sgmef_qr.default_operator.id', '1'),
+    name: config('lara_sgmef_qr.default_operator.name', 'Opérateur Principal')
 );
 
 $items = [
@@ -186,6 +205,55 @@ Accédez à l'interface web via : `http://your-app.com/sgmef`
 - **Dashboard** : `/sgmef` - Vue d'ensemble et statistiques
 - **Factures** : `/sgmef/invoices` - Gestion des factures
 - **Configuration** : `/sgmef/config` - Paramètres du package
+
+## 🔒 Sécurisation des Routes (Optionnel)
+
+**Important :** Par défaut, le package fonctionne sans authentification pour une compatibilité maximale. Si votre application utilise un système d'authentification et que vous souhaitez protéger l'interface web, voici comment procéder :
+
+### Option 1 : Middleware Global dans RouteServiceProvider
+
+```php
+// app/Providers/RouteServiceProvider.php
+public function boot()
+{
+    // ... autres configurations
+
+    // Protéger les routes du package avec authentification
+    Route::middleware(['web', 'auth'])
+         ->prefix('sgmef')
+         ->group(function () {
+             // Les routes du package seront automatiquement protégées
+         });
+}
+```
+
+### Option 2 : Configuration via Middleware
+
+```php
+// config/lara_sgmef_qr.php
+'web_interface' => [
+    'enabled' => true,
+    'middleware' => ['web', 'auth'], // Ajouter 'auth' pour protéger
+    'route_prefix' => 'sgmef',
+],
+```
+
+### Option 3 : Protection Personnalisée
+
+```php
+// routes/web.php
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/sgmef', function () {
+        return redirect()->route('sgmef.dashboard');
+    });
+});
+```
+
+### Recommandations de Sécurité
+
+- **Environnement de production** : Toujours protéger l'interface web
+- **Environnement de développement** : Peut rester ouvert pour faciliter les tests
+- **API endpoints** : Considérer l'ajout d'une authentification API si exposés publiquement
 
 ## 🧪 Tests
 

@@ -49,6 +49,9 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
         // Alias for easier access
         $this->app->alias(SgmefApiClientInterface::class, 'sgmef.api');
         $this->app->alias(InvoiceManagerInterface::class, 'sgmef.invoices');
+        
+        // Register helper methods
+        $this->registerHelpers();
     }
 
     /**
@@ -101,6 +104,20 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
     }
 
     /**
+     * Register helper methods
+     */
+    protected function registerHelpers(): void
+    {
+        // Register a helper to get default operator
+        $this->app->bind('sgmef.default_operator', function () {
+            return [
+                'name' => config('lara_sgmef_qr.default_operator.name', 'Opérateur Principal'),
+                'id' => config('lara_sgmef_qr.default_operator.id', '1'),
+            ];
+        });
+    }
+
+    /**
      * Get the services provided by the provider.
      */
     public function provides(): array
@@ -110,6 +127,18 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
             InvoiceManagerInterface::class,
             'sgmef.api',
             'sgmef.invoices',
+            'sgmef.default_operator',
+        ];
+    }
+
+    /**
+     * Get default operator configuration
+     */
+    public static function getDefaultOperator(): array
+    {
+        return [
+            'name' => config('lara_sgmef_qr.default_operator.name', 'Opérateur Principal'),
+            'id' => config('lara_sgmef_qr.default_operator.id', '1'),
         ];
     }
 }

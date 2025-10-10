@@ -25,8 +25,23 @@ return [
     // IFU par défaut de l'entreprise
     'default_ifu' => env('SGMEF_DEFAULT_IFU'),
 
-    // Nom de l'opérateur par défaut
-    'default_operator_name' => env('SGMEF_DEFAULT_OPERATOR_NAME', 'Système'),
+    /*
+    |--------------------------------------------------------------------------
+    | Default Operator
+    |--------------------------------------------------------------------------
+    |
+    | Configuration de l'opérateur par défaut utilisé lorsqu'aucun opérateur
+    | spécifique n'est fourni. Ceci garantit que le package fonctionne
+    | immédiatement sans système d'authentification.
+    |
+    */
+    'default_operator' => [
+        'name' => env('SGMEF_DEFAULT_OPERATOR_NAME', 'Opérateur Principal'),
+        'id' => env('SGMEF_DEFAULT_OPERATOR_ID', '1'),
+    ],
+
+    // Nom de l'opérateur par défaut (legacy - utilisez default_operator.name)
+    'default_operator_name' => env('SGMEF_DEFAULT_OPERATOR_NAME', 'Opérateur Principal'),
 
     // Options HTTP pour les requêtes
     'http_options' => [
@@ -45,7 +60,7 @@ return [
     // Configuration de l'interface web
     'web_interface' => [
         'enabled' => env('SGMEF_WEB_INTERFACE_ENABLED', true),
-        'middleware' => ['web', 'auth'], // Middleware pour protéger l'interface
+        'middleware' => ['web'], // Middleware de base (pas d'authentification requise)
         'route_prefix' => env('SGMEF_ROUTE_PREFIX', 'sgmef'),
     ],
 
