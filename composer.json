@@ -1,6 +1,6 @@
 {
   "name": "banelsems/lara-sgmef-qr",
-  "description": "Modern Laravel package for integrating with the SGMEF API (Benin electronic invoicing) with Clean Code architecture.",
+  "description": "Universal Laravel package for Benin electronic invoicing (SGMEF API) - Works immediately without authentication dependencies. Clean Code architecture with modern web interface.",
   "type": "library",
   "keywords": [
     "laravel",
@@ -9,7 +9,12 @@
     "electronic-invoicing",
     "qrcode",
     "clean-code",
-    "solid"
+    "solid",
+    "auth-independent",
+    "plug-and-play",
+    "universal-compatibility",
+    "taxation",
+    "africa"
   ],
   "homepage": "https://github.com/banelsems/lara-sgmef-qr",
   "license": "MIT",
