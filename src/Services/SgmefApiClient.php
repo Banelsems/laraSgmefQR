@@ -50,25 +50,6 @@ class SgmefApiClient implements SgmefApiClientInterface
         $this->baseUrl = rtrim($baseUrl, '/');
     }
 
-    public function getStatus(): array
-    {
-        return $this->makeRequest('GET', '/info/status');
-    }
-
-    public function getTaxGroups(): array
-    {
-        return $this->makeRequest('GET', '/info/taxGroups');
-    }
-
-    public function getInvoiceTypes(): array
-    {
-        return $this->makeRequest('GET', '/info/invoiceTypes');
-    }
-
-    public function getPaymentTypes(): array
-    {
-        return $this->makeRequest('GET', '/info/paymentTypes');
-    }
 
     public function createInvoice(InvoiceRequestDto $invoiceData): InvoiceResponseDto
     {
@@ -84,9 +65,9 @@ class SgmefApiClient implements SgmefApiClientInterface
         return InvoiceResponseDto::fromArray($response);
     }
 
-    public function getApiStatus(): ApiStatusDto
+    public function getStatus(): ApiStatusDto
     {
-        $response = $this->sendRequest('GET', '/info/status');
+        $response = $this->makeRequest('GET', '/info/status');
 
         return ApiStatusDto::from($response);
     }
@@ -96,7 +77,7 @@ class SgmefApiClient implements SgmefApiClientInterface
      */
     public function getTaxGroups(): array
     {
-        $response = $this->sendRequest('GET', '/info/tax-groups');
+        $response = $this->makeRequest('GET', '/info/tax-groups');
 
         return TaxGroupDto::collection($response)->all();
     }
@@ -106,7 +87,7 @@ class SgmefApiClient implements SgmefApiClientInterface
      */
     public function getInvoiceTypes(): array
     {
-        $response = $this->sendRequest('GET', '/info/invoice-types');
+        $response = $this->makeRequest('GET', '/info/invoice-types');
 
         return InvoiceTypeDto::collection($response)->all();
     }
@@ -116,7 +97,7 @@ class SgmefApiClient implements SgmefApiClientInterface
      */
     public function getPaymentTypes(): array
     {
-        $response = $this->sendRequest('GET', '/info/payment-types');
+        $response = $this->makeRequest('GET', '/info/payment-types');
 
         return PaymentTypeDto::collection($response)->all();
     }
@@ -208,6 +189,7 @@ class SgmefApiClient implements SgmefApiClientInterface
     {
         $errorData = $response->json();
         $errorMessage = $errorData['message'] ?? 'Erreur inconnue';
+        $errorCode = $errorData['code'] ?? $response->status();
         
         Log::error("SgmefAPI Error Response", [
             'method' => $method,
@@ -217,7 +199,7 @@ class SgmefApiClient implements SgmefApiClientInterface
         ]);
 
         throw new SgmefApiException(
-            "Erreur API SyGM-eMCF ({$response->status()}): {$errorMessage}",
+            "Erreur API SyGM-eMCF [{$errorCode}]: {$errorMessage}",
             $response->status()
         );
     }

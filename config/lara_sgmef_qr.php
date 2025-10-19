@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 return [
     'api_url' => env('SGMEF_API_URL', env('APP_ENV') === 'production' 
-        ? 'https://api.impots.bj/sygmef-emcf' 
-        : 'https://developper.impots.bj/sygmef-emcf'
+        ? 'https://api.impots.bj/sygmef-emcf/api' 
+        : 'https://developper.impots.bj/sygmef-emcf/api'
     ),
     'token' => env('SGMEF_TOKEN'),
     'default_ifu' => env('SGMEF_DEFAULT_IFU'),
