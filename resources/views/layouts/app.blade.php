@@ -144,7 +144,7 @@
     </div>
 
     @stack('scripts')
-    @include('partials.toast', ['type' => session('toast_type', 'success'), 'message' => session('toast_message', '')])
+    @include('lara-sgmef-qr::partials.toast')
     <!-- Tooltips Alpine.js : rien à ajouter ici, ils sont inclus dans les partials -->
     <!-- Skeleton loader : à utiliser dans les vues lors des chargements -->
 </body>
