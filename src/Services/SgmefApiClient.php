@@ -28,7 +28,7 @@ class SgmefApiClient implements SgmefApiClientInterface
         ?string $token = null,
         array $httpOptions = []
     ) {
-        $this->baseUrl = $baseUrl ?? config('lara_sgmef_qr.api_url');
+        $this->baseUrl = rtrim($baseUrl ?? config('lara_sgmef_qr.api_url'), '/');
         $this->token = $token ?? config('lara_sgmef_qr.token');
         $this->httpOptions = array_merge([
             'timeout' => 30,
