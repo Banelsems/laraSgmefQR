@@ -8,6 +8,10 @@ use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceResponseDto;
 use Banelsems\LaraSgmefQr\DTOs\SecurityElementsDto;
+use Banelsems\LaraSgmefQr\DTOs\ApiStatusDto;
+use Banelsems\LaraSgmefQr\DTOs\InvoiceTypeDto;
+use Banelsems\LaraSgmefQr\DTOs\PaymentTypeDto;
+use Banelsems\LaraSgmefQr\DTOs\TaxGroupDto;
 use Banelsems\LaraSgmefQr\Exceptions\SgmefApiException;
 use Illuminate\Http\Client\Factory as HttpClient;
 use Illuminate\Http\Client\Response;
@@ -80,7 +84,44 @@ class SgmefApiClient implements SgmefApiClientInterface
         return InvoiceResponseDto::fromArray($response);
     }
 
-    public function confirmInvoice(string $uid): SecurityElementsDto
+    public function getApiStatus(): ApiStatusDto
+    {
+        $response = $this->sendRequest('GET', '/info/status');
+
+        return ApiStatusDto::from($response);
+    }
+
+    /**
+     * @return array<TaxGroupDto>
+     */
+    public function getTaxGroups(): array
+    {
+        $response = $this->sendRequest('GET', '/info/tax-groups');
+
+        return TaxGroupDto::collection($response)->all();
+    }
+
+    /**
+     * @return array<InvoiceTypeDto>
+     */
+    public function getInvoiceTypes(): array
+    {
+        $response = $this->sendRequest('GET', '/info/invoice-types');
+
+        return InvoiceTypeDto::collection($response)->all();
+    }
+
+    /**
+     * @return array<PaymentTypeDto>
+     */
+    public function getPaymentTypes(): array
+    {
+        $response = $this->sendRequest('GET', '/info/payment-types');
+
+        return PaymentTypeDto::collection($response)->all();
+    }
+
+    public function confirmInvoice(string $uid, bool $withQrCode = false): array
     {
         $response = $this->makeRequest('PUT', "/invoice/{$uid}/confirm");
         

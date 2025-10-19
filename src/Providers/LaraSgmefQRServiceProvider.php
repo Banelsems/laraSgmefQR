@@ -7,6 +7,8 @@ namespace Banelsems\LaraSgmefQr\Providers;
 use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
 use Banelsems\LaraSgmefQr\Services\SgmefApiClient;
+use Banelsems\LaraSgmefQr\Commands\EmecefGenerateDeclaration;
+use Banelsems\LaraSgmefQr\Services\DeclarationGeneratorService;
 use Banelsems\LaraSgmefQr\Services\InvoiceManager;
 use Banelsems\LaraSgmefQr\Support\LaravelVersionHelper;
 use Illuminate\Http\Client\Factory as HttpClient;
@@ -30,6 +32,13 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
         );
 
         // Register API Client as singleton
+        $this->app->singleton(DeclarationGeneratorService::class, function ($app) {
+            return new DeclarationGeneratorService(
+                $app->make(InvoiceManagerInterface::class),
+                $app->make(SgmefApiClientInterface::class)
+            );
+        });
+
         $this->app->singleton(SgmefApiClientInterface::class, function ($app) {
             return new SgmefApiClient(
                 $app->make(HttpClient::class),
@@ -59,6 +68,12 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                EmecefGenerateDeclaration::class,
+            ]);
+        }
+
         // Publish configuration file
         $this->publishes([
             __DIR__ . '/../../config/lara_sgmef_qr.php' => config_path('lara_sgmef_qr.php'),
