@@ -143,20 +143,8 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    @php
-                                        $statusConfig = [
-                                            'pending' => ['bg-yellow-100', 'text-yellow-800', 'En attente'],
-                                            'confirmed' => ['bg-green-100', 'text-green-800', 'Confirmée'],
-                                            'cancelled' => ['bg-red-100', 'text-red-800', 'Annulée'],
-                                            'error' => ['bg-red-100', 'text-red-800', 'Erreur'],
-                                        ];
-                                        $status = $invoice->status->value ?? 'pending';
-                                        $config = $statusConfig[$status] ?? $statusConfig['pending'];
-                                    @endphp
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $config[0] }} {{ $config[1] }}">
-                                        {{ $config[2] }}
-                                    </span>
-                                </td>
+    @include('partials.status-badge', ['status' => $invoice->status])
+</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ $invoice->created_at?->format('d/m/Y H:i') ?? 'N/A' }}
                                 </td>

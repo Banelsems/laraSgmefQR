@@ -6,9 +6,33 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'LaraSgmefQR') - Gestion des Factures</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Typo Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS (palette custom via config inline) -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: {
+              primary: { DEFAULT: '#2563eb', light: '#3b82f6', dark: '#1e40af' },
+              success: { DEFAULT: '#22c55e' },
+              warning: { DEFAULT: '#f59e42' },
+              error: { DEFAULT: '#ef4444' },
+            },
+          },
+        },
+      }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <!-- Heroicons (SVG) -->
+    <script src="https://unpkg.com/heroicons@2.0.16/dist/heroicons.min.js"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Font Awesome (fallback pour certains icônes) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @stack('styles')
+
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
@@ -120,5 +144,8 @@
     </div>
 
     @stack('scripts')
+    @include('partials.toast', ['type' => session('toast_type', 'success'), 'message' => session('toast_message', '')])
+    <!-- Tooltips Alpine.js : rien à ajouter ici, ils sont inclus dans les partials -->
+    <!-- Skeleton loader : à utiliser dans les vues lors des chargements -->
 </body>
 </html>

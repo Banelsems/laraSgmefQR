@@ -27,8 +27,9 @@
                 <!-- IFU -->
                 <div>
                     <label for="ifu" class="block text-sm font-medium text-gray-700 mb-2">
-                        IFU de l'entreprise <span class="text-red-500">*</span>
-                    </label>
+    IFU de l'entreprise <span class="text-red-500">*</span>
+    @include('partials.tooltip', ['text' => 'Identifiant Fiscal Unique. 13 chiffres.'])
+</label>
                     <input type="text" 
                            id="ifu" 
                            name="ifu"

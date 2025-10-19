@@ -9,7 +9,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center">
-                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-600 animate-pulse">
                     <i class="fas fa-file-invoice text-xl"></i>
                 </div>
                 <div class="ml-4">
@@ -21,7 +21,7 @@
 
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center">
-                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 animate-pulse">
                     <i class="fas fa-clock text-xl"></i>
                 </div>
                 <div class="ml-4">
@@ -33,7 +33,7 @@
 
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center">
-                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                <div class="p-3 rounded-full bg-green-100 text-green-600 animate-pulse">
                     <i class="fas fa-check-circle text-xl"></i>
                 </div>
                 <div class="ml-4">
@@ -45,7 +45,7 @@
 
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center">
-                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                <div class="p-3 rounded-full bg-green-100 text-green-600 animate-pulse">
                     <i class="fas fa-money-bill-wave text-xl"></i>
                 </div>
                 <div class="ml-4">
@@ -69,7 +69,7 @@
                             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $invoice->status->getColor() }}-100 text-{{ $invoice->status->getColor() }}-800">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $invoice->status->getColor() }}-100 text-{{ $invoice->status->getColor() }}-800 tooltip" data-tooltip="{{ $invoice->status->getLabel() }}">
                                             {{ $invoice->status->getLabel() }}
                                         </span>
                                     </div>
