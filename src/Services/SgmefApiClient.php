@@ -103,7 +103,7 @@ class SgmefApiClient implements SgmefApiClientInterface
         return PaymentTypeDto::collection($response)->all();
     }
 
-    public function confirmInvoice(string $uid, bool $withQrCode = false): array
+    public function confirmInvoice(string $uid, bool $withQrCode = false): SecurityElementsDto
     {
         $response = $this->makeRequest('PUT', "/invoice/{$uid}/confirm");
         

@@ -105,20 +105,7 @@ class InvoiceManager implements InvoiceManagerInterface
                 $securityElements = $this->apiClient->confirmInvoice($invoice->uid);
 
                 // Vérification des erreurs dans la réponse
-                if ($securityElements->hasError()) {
-                    $invoice->update([
-                        'status' => InvoiceStatusEnum::ERROR,
-                        'raw_response' => array_merge(
-                            $invoice->raw_response ?? [],
-                            ['security_elements' => $securityElements->toArray()]
-                        ),
-                    ]);
-
-                    throw new InvoiceException(
-                        'Erreur lors de la confirmation: ' . $securityElements->getErrorMessage()
-                    );
-                }
-
+                
                 // Mise à jour avec les éléments de sécurité
                 $invoice->update([
                     'status' => InvoiceStatusEnum::CONFIRMED,

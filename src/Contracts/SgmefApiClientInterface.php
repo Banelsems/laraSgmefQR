@@ -48,7 +48,7 @@ interface SgmefApiClientInterface
     /**
      * Confirme une facture et récupère les éléments de sécurité
      */
-        public function confirmInvoice(string $uid, bool $withQrCode = false): array;
+        public function confirmInvoice(string $uid, bool $withQrCode = false): SecurityElementsDto;
 
     /**
      * Annule une facture
