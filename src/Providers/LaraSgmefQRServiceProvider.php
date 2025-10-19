@@ -112,7 +112,6 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
         Route::group([
             'prefix' => $routePrefix,
             'middleware' => $middleware,
-            'namespace' => 'Banelsems\\LaraSgmefQr\\Http\\Controllers',
         ], function () {
             $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
         });

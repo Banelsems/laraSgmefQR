@@ -54,16 +54,16 @@ class SgmefApiClient implements SgmefApiClientInterface
 
     public function createInvoice(InvoiceRequestDto $invoiceData): InvoiceResponseDto
     {
-        $response = $this->makeRequest('POST', '/invoice', $invoiceData->toArray());
+                $response = $this->makeRequest('POST', '/invoice', $invoiceData->toArray());
         
-        return InvoiceResponseDto::fromArray($response);
+        return InvoiceResponseDto::from($response);
     }
 
-    public function getInvoice(string $uid): InvoiceResponseDto
+        public function getInvoice(string $uid): InvoiceResponseDto
     {
         $response = $this->makeRequest('GET', "/invoice/{$uid}");
         
-        return InvoiceResponseDto::fromArray($response);
+        return InvoiceResponseDto::from($response);
     }
 
     public function getStatus(): ApiStatusDto
@@ -107,7 +107,7 @@ class SgmefApiClient implements SgmefApiClientInterface
     {
         $response = $this->makeRequest('PUT', "/invoice/{$uid}/confirm");
         
-        return SecurityElementsDto::fromArray($response);
+                return SecurityElementsDto::from($response);
     }
 
     public function cancelInvoice(string $uid): array

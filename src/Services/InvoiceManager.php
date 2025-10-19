@@ -10,6 +10,7 @@ use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
 use Banelsems\LaraSgmefQr\Enums\InvoiceStatusEnum;
 use Banelsems\LaraSgmefQr\Exceptions\InvoiceException;
 use Banelsems\LaraSgmefQr\Exceptions\SgmefApiException;
+use Spatie\LaravelData\Exceptions\ValidationException;
 use Banelsems\LaraSgmefQr\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -28,18 +29,11 @@ class InvoiceManager implements InvoiceManagerInterface
      */
     public function createInvoice(InvoiceRequestDto $invoiceData): Invoice
     {
-        // Validation des données
-        $errors = $invoiceData->validate();
-        if (!empty($errors)) {
-            throw new InvoiceException('Données de facture invalides: ' . implode(', ', $errors));
-        }
-
         return DB::transaction(function () use ($invoiceData) {
             try {
-                // Appel à l'API pour créer la facture
+                // La validation est maintenant gérée par le DTO. Une ValidationException sera levée si les données sont invalides.
                 $apiResponse = $this->apiClient->createInvoice($invoiceData);
 
-                // Création de l'enregistrement en base
                 $invoice = Invoice::create([
                     'uid' => $apiResponse->uid,
                     'ifu' => $invoiceData->ifu,
@@ -59,6 +53,8 @@ class InvoiceManager implements InvoiceManagerInterface
 
                 return $invoice;
 
+            } catch (ValidationException $e) {
+                throw new InvoiceException('Données de facture invalides: ' . implode(', ', array_keys($e->errors())));
             } catch (SgmefApiException $e) {
                 Log::error('Erreur API lors de la création de facture', [
                     'error' => $e->getMessage(),
@@ -72,7 +68,6 @@ class InvoiceManager implements InvoiceManagerInterface
                     'customer_ifu' => $invoiceData->client->ifu,
                     'type' => $invoiceData->type,
                     'status' => InvoiceStatusEnum::ERROR,
-                    'total_amount' => $invoiceData->getTotalAmount(),
                     'raw_request' => $invoiceData->toArray(),
                     'raw_response' => ['error' => $e->getMessage()],
                 ]);

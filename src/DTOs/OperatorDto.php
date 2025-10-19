@@ -2,53 +2,16 @@
 
 namespace Banelsems\LaraSgmefQr\DTOs;
 
-/**
- * DTO pour les informations de l'opérateur
- */
-class OperatorDto
+use Spatie\LaravelData\Attributes\Validation\Required;
+use Spatie\LaravelData\Data;
+
+class OperatorDto extends Data
 {
     public function __construct(
+        #[Required]
         public readonly int|string $id,
+
+        #[Required]
         public readonly string $name
     ) {}
-
-    /**
-     * Crée une instance depuis un tableau
-     */
-    public static function fromArray(array $data): self
-    {
-        return new self(
-            id: $data['id'],
-            name: $data['name']
-        );
-    }
-
-    /**
-     * Convertit en tableau pour l'API
-     */
-    public function toArray(): array
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-        ];
-    }
-
-    /**
-     * Valide les données de l'opérateur
-     */
-    public function validate(): array
-    {
-        $errors = [];
-
-        if (empty($this->name)) {
-            $errors[] = 'Le nom de l\'opérateur est requis';
-        }
-
-        if (empty($this->id)) {
-            $errors[] = 'L\'ID de l\'opérateur est requis';
-        }
-
-        return $errors;
-    }
 }

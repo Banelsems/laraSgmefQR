@@ -5,6 +5,7 @@ namespace Banelsems\LaraSgmefQr\Http\Controllers;
 use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
 use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
+use Spatie\LaravelData\Exceptions\ValidationException;
 use Banelsems\LaraSgmefQr\Http\Requests\InvoiceRequest;
 use Banelsems\LaraSgmefQr\Models\Invoice;
 use Illuminate\Http\Request;
@@ -81,7 +82,7 @@ class InvoiceController extends BaseController
                 ];
             }
             
-            $invoiceData = InvoiceRequestDto::fromArray($validatedData);
+                        $invoiceData = InvoiceRequestDto::from($validatedData);
             $invoice = $this->invoiceManager->createInvoice($invoiceData);
 
             return redirect()
@@ -172,16 +173,7 @@ class InvoiceController extends BaseController
                 ];
             }
             
-            $invoiceData = InvoiceRequestDto::fromArray($requestData);
-            
-            // Validation des données
-            $errors = $invoiceData->validate();
-            if (!empty($errors)) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $errors
-                ], 422);
-            }
+                        $invoiceData = InvoiceRequestDto::from($requestData);
 
             // Appel à l'API pour obtenir les totaux calculés
             $response = $this->apiClient->createInvoice($invoiceData);
@@ -196,6 +188,12 @@ class InvoiceController extends BaseController
                 ]
             ]);
 
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
