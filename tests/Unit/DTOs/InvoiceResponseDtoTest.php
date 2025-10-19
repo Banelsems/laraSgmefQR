@@ -9,7 +9,7 @@ class InvoiceResponseDtoTest extends TestCase
 {
     /**
      * @test
-     * @covers \Banelsems\LaraSgmefQr\DTOs\InvoiceResponseDto::fromArray
+     * @covers \Banelsems\LaraSgmefQr\DTOs\InvoiceResponseDto::from
      */
     public function it_can_be_created_from_api_response_with_short_keys()
     {
@@ -24,7 +24,7 @@ class InvoiceResponseDtoTest extends TestCase
         ];
 
         // 2. Créer le DTO à partir de ces données
-        $dto = InvoiceResponseDto::fromArray($apiResponseData);
+        $dto = InvoiceResponseDto::from($apiResponseData);
 
         // 3. Vérifier que les propriétés du DTO ont été correctement mappées
         $this->assertSame('f3ef8d4a-c8ca-4212-a3bc-69238ac38d86', $dto->uid);
@@ -37,7 +37,7 @@ class InvoiceResponseDtoTest extends TestCase
 
     /**
      * @test
-     * @covers \Banelsems\LaraSgmefQr\DTOs\InvoiceResponseDto::fromArray
+     * @covers \Banelsems\LaraSgmefQr\DTOs\InvoiceResponseDto::from
      */
     public function it_handles_missing_optional_keys_gracefully()
     {
@@ -47,7 +47,7 @@ class InvoiceResponseDtoTest extends TestCase
             'total' => 100.0,
         ];
 
-        $dto = InvoiceResponseDto::fromArray($apiResponseData);
+        $dto = InvoiceResponseDto::from($apiResponseData);
 
         $this->assertSame(100.0, $dto->totalAmount);
         $this->assertNull($dto->totalTaxAmount);
