@@ -5,6 +5,30 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2025-10-19
+
+### 🐛 Corrigé
+
+- **Bug Critique DTO** : Correction d'une erreur fatale `Undefined array key "totalAmount"` dans `InvoiceResponseDto`. Le DTO est maintenant capable de mapper correctement les clés courtes de la réponse de l'API SyGM-eMCF (ex: `total`, `ts`, `aib`) vers les propriétés attendues (`totalAmount`, `totalTaxAmount`, `totalAibAmount`).
+- **Robustesse du Client API** : Le `SgmefApiClient` est maintenant plus tolérant aux erreurs de configuration de l'URL de l'API (`SGMEF_API_URL`), en supprimant automatiquement les slashs de fin pour éviter les URL incorrectes.
+
+### 🧪 Ajouté
+
+- **Test Unitaire pour DTO** : Ajout d'un test unitaire (`InvoiceResponseDtoTest.php`) pour valider le mappage correct des réponses de l'API et prévenir les régressions.
+
+## [2.1.0] - 2025-10-18
+
+### 🚀 Ajouté
+
+- **Indépendance Totale de l'Authentification** : Le package ne dépend plus d'aucun système d'authentification Laravel. Il fonctionne "out-of-the-box".
+- **Concept d'Opérateur** : Remplace la dépendance à `Auth::user()` par un système d'opérateur configurable via `config/lara_sgmef_qr.php`.
+- **Interface Web Autonome** : L'interface web est désormais accessible par défaut sans middleware `auth`.
+
+### 🔄 Modifié
+
+- **Configuration Simplifiée** : Ajout de la section `default_operator` pour une configuration rapide.
+- **Contrôleurs et Requêtes** : Mise à jour pour utiliser l'opérateur par défaut si aucun n'est fourni.
+
 ## [2.0.0] - 2024-10-09
 
 ### 🚀 Ajouté

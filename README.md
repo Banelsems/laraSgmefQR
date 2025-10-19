@@ -775,9 +775,9 @@ class InvoiceResponseDto
 {
     public string $uid;              // UID de la facture
     public string $status;           // Statut de la facture
-    public float $totalAmount;       // Montant total TTC
-    public float $totalTaxAmount;    // Total des taxes
-    public float $totalAibAmount;    // Total AIB
+    public float $totalAmount;       // Montant total TTC (mappé depuis 'total')
+    public float $totalTaxAmount;    // Total des taxes (mappé depuis 'ts')
+    public float $totalAibAmount;    // Total AIB (mappé depuis 'aib')
     public array $items;             // Articles avec calculs
     public ?string $qrCodeData;      // Données QR Code (si confirmée)
     public ?string $mecfCode;        // Code MECeF (si confirmée)
