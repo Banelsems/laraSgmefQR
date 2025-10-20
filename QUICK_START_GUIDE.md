@@ -50,7 +50,7 @@ class QuickInvoiceExample
         $invoiceManager = app(InvoiceManagerInterface::class);
 
         // 2. Créer les données de la facture
-        $invoiceData = InvoiceRequestDto::fromArray([
+        $invoiceData = InvoiceRequestDto::from([
             'ifu' => config('lara_sgmef_qr.default_ifu'),
             'type' => 'FV', // Facture de Vente
             
@@ -191,7 +191,7 @@ class TestSgmefInvoice extends Command
         try {
             $invoiceManager = app(InvoiceManagerInterface::class);
             
-            $invoiceData = InvoiceRequestDto::fromArray([
+            $invoiceData = InvoiceRequestDto::from([
                 'ifu' => config('lara_sgmef_qr.default_ifu'),
                 'type' => 'FV',
                 'client' => ['name' => 'Client Test'],

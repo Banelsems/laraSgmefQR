@@ -16,6 +16,7 @@ use Banelsems\LaraSgmefQr\Exceptions\SgmefApiException;
 use Illuminate\Http\Client\Factory as HttpClient;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Client API pour SyGM-eMCF - Responsabilité unique : communication avec l'API
@@ -118,32 +119,39 @@ class SgmefApiClient implements SgmefApiClientInterface
     /**
      * Effectue une requête HTTP vers l'API
      */
-    private function makeRequest(string $method, string $endpoint, array $data = []): array
+        private function makeRequest(string $method, string $endpoint, array $data = []): array
     {
         $url = $this->baseUrl . $endpoint;
-        
+        $requestId = (string) Str::uuid();
+
         try {
-            Log::info("SgmefAPI Request", [
+            $context = [
+                'request_id' => $requestId,
                 'method' => $method,
                 'url' => $url,
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent(),
                 'data' => $data
-            ]);
+            ];
+
+            Log::info("SgmefAPI Request", $context);
 
             $response = $this->httpClient
                 ->withHeaders($this->getHeaders())
                 ->withOptions($this->httpOptions)
                 ->{strtolower($method)}($url, $data);
 
-            $this->logResponse($response, $method, $endpoint);
+                        $this->logResponse($response, $method, $endpoint, $requestId);
 
             if ($response->successful()) {
                 return $response->json();
             }
 
-            $this->handleErrorResponse($response, $method, $endpoint);
+                        $this->handleErrorResponse($response, $method, $endpoint, $requestId);
 
         } catch (\Exception $e) {
-            Log::error("SgmefAPI Exception", [
+                        Log::error("SgmefAPI Exception", [
+                'request_id' => $requestId,
                 'method' => $method,
                 'endpoint' => $endpoint,
                 'error' => $e->getMessage(),
@@ -173,9 +181,10 @@ class SgmefApiClient implements SgmefApiClientInterface
     /**
      * Log la réponse de l'API
      */
-    private function logResponse(Response $response, string $method, string $endpoint): void
+        private function logResponse(Response $response, string $method, string $endpoint, string $requestId): void
     {
         Log::info("SgmefAPI Response", [
+            'request_id' => $requestId,
             'method' => $method,
             'endpoint' => $endpoint,
             'status' => $response->status(),
@@ -186,13 +195,14 @@ class SgmefApiClient implements SgmefApiClientInterface
     /**
      * Gère les réponses d'erreur de l'API
      */
-    private function handleErrorResponse(Response $response, string $method, string $endpoint): void
+        private function handleErrorResponse(Response $response, string $method, string $endpoint, string $requestId): void
     {
         $errorData = $response->json();
         $errorMessage = $errorData['message'] ?? 'Erreur inconnue';
         $errorCode = $errorData['code'] ?? $response->status();
         
-        Log::error("SgmefAPI Error Response", [
+                Log::error("SgmefAPI Error Response", [
+            'request_id' => $requestId,
             'method' => $method,
             'endpoint' => $endpoint,
             'status' => $response->status(),

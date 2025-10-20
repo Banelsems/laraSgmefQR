@@ -73,7 +73,7 @@ php artisan serve
 **Avant (v2.0.x) :**
 ```php
 // L'opérateur était souvent omis ou déduit de Auth::user()
-$invoiceData = InvoiceRequestDto::fromArray([
+$invoiceData = InvoiceRequestDto::from([
     'ifu' => '1234567890123',
     'type' => 'FV',
     'client' => [...],
@@ -86,7 +86,7 @@ $invoiceData = InvoiceRequestDto::fromArray([
 **Après (v2.1.0) :**
 ```php
 // L'opérateur est automatiquement rempli si non fourni
-$invoiceData = InvoiceRequestDto::fromArray([
+$invoiceData = InvoiceRequestDto::from([
     'ifu' => '1234567890123',
     'type' => 'FV',
     'client' => [...],

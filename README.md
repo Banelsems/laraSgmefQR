@@ -281,7 +281,7 @@ public function store(Request $request)
     );
 
     // 3. Créer le DTO principal pour la facture
-    $invoiceData = InvoiceRequestDto::fromArray([
+    $invoiceData = InvoiceRequestDto::from([
         'ifu' => config('lara_sgmef_qr.default_ifu'),
         'type' => 'FV',
         'client' => [

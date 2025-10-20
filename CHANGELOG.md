@@ -195,7 +195,7 @@ $invoice = $service->createInvoice($data);
 // Nouveau code (v2.0+)
 use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
 $manager = app(InvoiceManagerInterface::class);
-$invoice = $manager->createInvoice(InvoiceRequestDto::fromArray($data));
+$invoice = $manager->createInvoice(InvoiceRequestDto::from($data));
 ```
 
 ## Support & Assistance
