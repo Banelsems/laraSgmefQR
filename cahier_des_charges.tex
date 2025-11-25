@@ -1,0 +1,311 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Cahier des Charges Technique et Fonctionnel
+% Projet : MonColie
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[a4paper, 12pt, twoside]{report}
+
+% --- PACKAGES ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel} % Typographie française
+\usepackage{lmodern} % Police plus moderne
+\usepackage[a4paper, margin=2.5cm]{geometry} % Marges
+\usepackage{booktabs} % Tableaux professionnels
+\usepackage{longtable} % Tableaux sur plusieurs pages
+\usepackage{array} % Colonnes de tableaux avancées
+\usepackage{multirow} % Cellules fusionnées sur plusieurs lignes
+\usepackage{graphicx} % Pour inclure des images (logo)
+\usepackage{enumitem} % Listes personnalisées
+\usepackage{fancyhdr} % En-têtes et pieds de page
+\usepackage{hyperref} % Liens cliquables
+\usepackage{xcolor} % Couleurs
+\usepackage{listings} % Pour le code/contrat
+
+% --- DÉFINITION DES COULEURS ---
+\definecolor{moncolieblue}{RGB}{0, 123, 167}
+\definecolor{lightgray}{gray}{0.95}
+\definecolor{riskhigh}{RGB}{220, 38, 127}
+\definecolor{riskmedium}{RGB}{255, 140, 0}
+\definecolor{risklow}{RGB}{255, 215, 0}
+
+% --- CONFIGURATION DES EN-TÊTES/PIEDS DE PAGE ---
+\pagestyle{fancy}
+\fancyhf{} % Vide les en-têtes/pieds
+\renewcommand{\headrulewidth}{0.4pt} % Ligne d'en-tête
+\renewcommand{\footrulewidth}{0pt}
+\fancyhead[LE,RO]{\thepage} % Numéro de page à gauche (pages paires) et à droite (pages impaires)
+\fancyhead[LO]{\rightmark} % Titre de la section à gauche (pages impaires)
+\fancyhead[RE]{\leftmark} % Titre du chapitre à droite (pages paires)
+
+% --- CONFIGURATION DES HYPERLIENS ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=moncolieblue,
+    urlcolor=moncolieblue,
+    pdftitle={Cahier des Charges - MonColie},
+    pdfauthor={Banel SEMASSOUSSI & Eden AHOUSSOU},
+    pdfsubject={Logistique Collaborative},
+    pdfkeywords={cahier des charges, cahier des charges technique, cahier des charges fonctionnel, MonColie, logistique, envoi de colis}
+}
+
+% --- MÉTADONNÉES DU DOCUMENT ---
+\title{\huge \textbf{Cahier des Charges Technique et Fonctionnel} \\ \vspace{0.5cm} \Large Projet : MonColie}
+\author{Banel SEMASSOUSSI \& Eden AHOUSSOU}
+\date{\today}
+
+% --- DÉBUT DU DOCUMENT ---
+\begin{document}
+
+% --- PAGE DE GARDE ---
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    % Décommentez la ligne suivante et ajoutez votre fichier logo.png si vous en avez un
+    % \includegraphics[width=0.4\textwidth]{logo.png} \\ \vspace{1cm}
+    {\huge \bfseries Cahier des Charges Technique et Fonctionnel \par}
+    \vspace{1.5cm}
+    {\Large Projet : MonColie \par}
+    \vspace{2cm}
+    {\large La plateforme collaborative d'envoi de colis \par}
+    \vfill
+    {\large \textit{Confidentiel - Propriété de [Nom de l'entreprise]} \par}
+    \vspace{1cm}
+    {\large Version 1.0 \par}
+    {\large \today \par}
+\end{titlepage}
+
+% --- TABLE DES MATIÈRES ---
+\tableofcontents
+\newpage
+
+% --- CHAPITRE 1 : INTRODUCTION ---
+\chapter{Introduction}
+MonColie est une plateforme innovante qui connecte les expéditeurs de colis internationaux avec des voyageurs disposant d’espace dans leurs bagages. Elle vise à offrir une solution économique, rapide et sécurisée pour l’envoi de colis entre différents pays (notamment sur les axes Chine-Afrique et Chine-Europe), tout en permettant aux voyageurs de monétiser leurs déplacements en transportant légalement des colis vérifiés, assurés et scellés.
+
+Ce cahier des charges est le document de référence officiel pour le développement de la plateforme MonColie. Il définit de manière exhaustive les spécifications techniques, fonctionnelles, réglementaires et économiques nécessaires pour guider les équipes de développement, de design et de gestion de projet. Rédigé dans un langage clair, il s'adresse à la fois à un public technique (développeurs, architectes) et commercial (chef de produit, investisseurs).
+
+\section{Contexte et Vision du Projet}
+Le projet MonColie répond à un double objectif :
+\begin{enumerate}
+    \item \textbf{Offrir une solution économique et rapide d’envoi de colis internationaux :} En contournant les contraintes des logisticiens traditionnels, MonColie permet d'acheminer des colis à un coût réduit et avec des délais souvent plus courts, en utilisant les réseaux de transport existants (les voyageurs).
+    \item \textbf{Permettre aux voyageurs de monétiser leurs déplacements :} Les voyageurs peuvent transporter des colis pour le compte de tiers, moyennant une rémunération, tout en respectant un cadre légal strict et en bénéficiant de garanties (vérification des colis, assurance, etc.).
+\end{enumerate}
+
+\textbf{Vision :} Devenir la plateforme de référence mondiale pour l'envoi de colis collaboratifs, rendant le commerce international plus accessible, rapide et humain.
+
+\textbf{Mission :} Connecter les expéditeurs et les voyageurs via une technologie de confiance, pour simplifier et sécuriser les échanges de biens à travers le monde.
+
+\section{Objectifs du Cahier des Charges}
+Ce document a pour but de :
+\begin{itemize}
+    \item Définir les spécifications techniques : architecture système, technologies, exigences de performance et de sécurité.
+    \item Définir les spécifications fonctionnelles : description détaillée des fonctionnalités, y compris les cas d'utilisation.
+    \item Définir les exigences réglementaires : conformité au RGPD, respect des normes logistiques et douanières.
+    \item Définir le modèle économique : sources de revenus, structure des coûts, stratégie de tarification.
+    \item Définir le chronogramme de développement : roadmap du projet, phases clés (MVP, évolution).
+    \item Définir l'analyse concurrentielle : positionnement de MonColie et identification de ses avantages compétitifs.
+    \item Définir l'analyse des risques : identification des risques potentiels et stratégies de mitigation.
+\end{itemize}
+
+% --- CHAPITRE 2 : ARCHITECTURE ---
+\chapter{Architecture, Technologie et Infrastructures}
+\section{Choix d’Architecture Générale (Microservices)}
+Pour garantir la scalabilité, la maintenabilité et la résilience, MonColie adoptera une architecture en microservices. Chaque fonctionnalité majeure sera un service indépendant, communiquant avec les autres via des APIs RESTful.
+
+\begin{itemize}
+    \item \textbf{API Gateway :} Point d'entrée unique pour toutes les requêtes client (web, mobile). Gère l'authentification, le routage, la limitation de débit.
+    \item \textbf{Services Disponibles :} \texttt{service-utilisateur}, \texttt{service-colis}, \texttt{service-trajet}, \texttt{service-matching}, \texttt{service-paiement}, \texttt{service-notification}, \texttt{service-logistique}, \texttt{service-chat}.
+    \item \textbf{Base de Données :} Chaque service aura sa propre base de données (principe "Database per Service") pour éviter les couplages forts. \textbf{PostgreSQL} sera privilégié.
+\end{itemize}
+
+\section{Technologies et Outils de Développement}
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{@{} l l @{}}
+        \toprule
+        \textbf{Composant} & \textbf{Technologie} \\
+        \midrule
+        Frontend Web & React / Next.js, TypeScript \\
+        Application Mobile & React Native, TypeScript \\
+        Backend API & Node.js avec NestJS (ou Python Django) \\
+        Base de Données & PostgreSQL \\
+        Cache & Redis \\
+        Infrastructure Cloud & Alibaba Cloud (Chine) \& AWS/GCP (Global) \\
+        Conteneurisation & Docker \\
+        Orchestration & Kubernetes \\
+        CI/CD & GitLab CI / GitHub Actions \\
+        Monitoring & Prometheus, Grafana, ELK Stack \\
+        \bottomrule
+    \end{tabular}
+    \caption{Stack technique de MonColie}
+    \label{tab:tech_stack}
+\end{table}
+
+% --- CHAPITRE 3 : CAS D'UTILISATION ---
+\chapter{Cas d'Utilisation Détaillés}
+\section{UC-01 : Inscription et Vérification d'Identité (KYC)}
+\begin{description}[labelwidth=\widthof{Pré-conditions:}]
+    \item[Acteur(s) Principal(aux):] Utilisateur (futur Expéditeur ou Voyageur).
+    \item[Objectif:] Créer un compte sur MonColie et faire valider son identité.
+    \item[Pré-conditions:] L'utilisateur dispose d'une connexion internet et d'une pièce d'identité valide.
+    \item[Scénario Nominal:]
+    \begin{enumerate}
+        \item L'utilisateur ouvre l'application et clique sur "S'inscrire".
+        \item Il choisit son type de profil : "Expéditeur" ou "Voyageur".
+        \item Il remplit le formulaire et accepte les CGU.
+        \item Il est redirigé vers le processus KYC.
+        \item Il prend une photo de sa pièce d'identité et un selfie.
+        \item Il soumet les documents.
+        \item Le système traite les informations et confirme la vérification.
+        \item Le badge "Identité Vérifiée" apparaît sur son profil.
+    \end{enumerate}
+\end{description}
+
+\section{UC-02 : Soumission d'un Colis par l'Expéditeur}
+\begin{description}[labelwidth=\widthof{Pré-conditions:}]
+    \item[Acteur(s) Principal(aux):] Expéditeur.
+    \item[Objectif:] Décrire un besoin d'envoi et le publier sur la plateforme.
+    \item[Pré-conditions:] L'expéditeur est connecté, son identité est vérifiée (KYC), et il a un moyen de paiement enregistré.
+    \item[Scénario Nominal:]
+    \begin{enumerate}
+        \item Depuis son tableau de bord, l'expéditeur clique sur "Envoyer un colis".
+        \item Il remplit le formulaire de description du colis (contenu, poids, dimensions, etc.).
+        \item Il saisit les villes de départ/destination et la date limite.
+        \item Le système affiche une estimation de la récompense.
+        \item Il choisit une option d'assurance.
+        \item Il confirme et publie l'annonce.
+        \item Le système lui présente une liste de voyageurs potentiels.
+    \end{enumerate}
+\end{description}
+
+% --- CHAPITRE 4 : ANNEXES ---
+\appendix
+\chapter{Annexes}
+
+\section{Annexe A : Grille d'Analyse des Risques Détaillée}
+\begin{longtable}{| p{2cm} | p{2cm} | p{3.5cm} | p{3.5cm} | c | c | c | p{2cm} | p{3.5cm} | p{3.5cm} |}
+    \caption{Grille d'Analyse des Risques Détaillée}
+    \label{tab:risk_analysis} \\
+    \hline
+    \rowcolor{lightgray}
+    \textbf{ID Risque} & \textbf{Catégorie} & \textbf{Description} & \textbf{Causes} & \textbf{Prob.} & \textbf{Impact} & \textbf{Score} & \textbf{Propriétaire} & \textbf{Mitigation} & \textbf{Contingence} \\
+    \hline
+    \endfirsthead
+
+    \multicolumn{10}{c}%
+    {{\bfseries \tablename\ \thetable{} -- suite de la page précédente}} \\
+    \hline
+    \rowcolor{lightgray}
+    \textbf{ID Risque} & \textbf{Catégorie} & \textbf{Description} & \textbf{Causes} & \textbf{Prob.} & \textbf{Impact} & \textbf{Score} & \textbf{Propriétaire} & \textbf{Mitigation} & \textbf{Contingence} \\
+    \hline
+    \endhead
+
+    \hline
+    \endfoot
+
+    R-01 & Opérationnel & Transport d'objets illicites. & Mauvaise foi, ignorance. & 2 & 5 & \textcolor{riskhigh}{10} & Ops & Vérification physique, modération IA. & Coopération autorités. \\
+    \hline
+    R-02 & Opérationnel & Défaillance du voyageur. & Négligence, retard. & 4 & 4 & \textcolor{riskhigh}{16} & Ops & Système de réputation, pénalités. & Remise en relation, assurance. \\
+    \hline
+    R-03 & Technologique & Fuite de données. & Vulnérabilité, attaque. & 2 & 5 & \textcolor{riskhigh}{10} & CTO & Audits, chiffrement. & Plan de réponse à incident. \\
+    \hline
+    R-04 & Technologique & Panne majeure. & Surcharge, bug critique. & 3 & 4 & \textcolor{riskmedium}{12} & CTO & Architecture redondante, monitoring. & Basculement, communication. \\
+    \hline
+    R-05 & Financier & Adoption lente. & Marketing inefficace. & 3 & 5 & \textcolor{riskhigh}{15} & CEO & Marketing communautaire, parrainage. & Pivot de stratégie. \\
+    \hline
+    R-06 & Juridique & Changement de réglementation. & Évolution des lois. & 2 & 4 & \textcolor{riskmedium}{8} & Juriste & Veille juridique, CGU flexibles. & Adaptation rapide. \\
+    \hline
+\end{longtable}
+
+\section{Annexe B : Modèle de Contrat de Mission Simplifié}
+\begin{center}
+\textbf{\large CONTRAT DE MISSION DE TRANSPORT DE COLIS MONCOLIE} \\
+\textit{Référence : MC-2024-XXXXX}
+\end{center}
+
+\vspace{1cm}
+
+\textbf{Entre les soussignés :}
+
+\noindent \textbf{L'Expéditeur :} \\
+\begin{tabular}{ll}
+    Nom/Prénom : & `[Nom de l'Expéditeur]` \\
+    Adresse : & `[Adresse de l'Expéditeur]` \\
+    Email : & `[Email de l'Expéditeur]` \\
+\end{tabular}
+
+\vspace{0.5cm}
+
+\noindent \textbf{Le Voyageur :} \\
+\begin{tabular}{ll}
+    Nom/Prénom : & `[Nom du Voyageur]` \\
+    Adresse : & `[Adresse du Voyageur]` \\
+    Email : & `[Email du Voyageur]` \\
+\end{tabular}
+
+\vspace{1cm}
+
+\textbf{Il est convenu ce qui suit :}
+
+\subsection*{Article 1 : Objet de la Mission}
+Le Voyageur accepte la mission de transporter un colis pour le compte de l'Expéditeur, de la ville de `[Ville de Départ]` à la ville de `[Ville de Destination]`.
+
+\subsection*{Article 2 : Description du Colis}
+\begin{center}
+\begin{tabular}{| l | l |}
+    \hline
+    \textbf{Caractéristique} & \textbf{Description} \\
+    \hline
+    Nature du contenu & `[Description du contenu]` \\
+    \hline
+    Poids déclaré & `[Poids en kg]` \\
+    \hline
+    Dimensions (L x l x H) & `[Dimensions en cm]` \\
+    \hline
+    Valeur déclarée & `[Valeur en EUR/USD]` \\
+    \hline
+    Numéro de scellé unique & `[Numéro attribué]` \\
+    \hline
+\end{tabular}
+\end{center}
+
+\subsection*{Article 3 : Obligations de l'Expéditeur}
+L'Expéditeur s'engage à :
+\begin{itemize}
+    \item Déposer le colis, ouvert, au point relais agréé.
+    \item S'acquitter du montant total, qui sera séquestré par MonColie.
+    \item Fournir une déclaration exacte du contenu.
+\end{itemize}
+
+\subsection*{Article 4 : Obligations du Voyageur}
+Le Voyageur s'engage à :
+\begin{itemize}
+    \item Prendre en charge le colis scellé.
+    \item Transporter le colis avec soin et à ne pas ouvrir le scellé.
+    \item Déposer le colis intact au point relais de destination.
+\end{itemize}
+
+\subsection*{Article 5 : Rémunération et Modalités de Paiement}
+Une rémunération de `[Montant]` EUR est promise au Voyageur. Le paiement est séquestré et sera libéré après confirmation de livraison.
+
+\subsection*{Article 6 : Responsabilité et Assurance}
+La plateforme MonColie agit en tant qu'intermédiaire technologique. Une assurance souscrite par l'Expéditeur couvre les risques de perte ou de détérioration.
+
+\subsection*{Article 7 : Litiges}
+Tout litige fera l'objet d'une tentative de médiation par MonColie.
+
+\vspace{1cm}
+
+\begin{flushright}
+Fait à `[Lieu]`, le `[Date]`
+\end{flushright}
+
+\noindent \textbf{Signature électronique via code OTP}
+\begin{itemize}
+    \item[\textbullet] Pour l'Expéditeur : `[Code OTP Expéditeur]`
+    \item[\textbullet] Pour le Voyageur : `[Code OTP Voyageur]`
+\end{itemize}
+
+% --- FIN DU DOCUMENT ---
+\end{document}

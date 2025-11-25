@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
  * Contrôleur pour la gestion des factures
@@ -82,7 +83,7 @@ class InvoiceController extends BaseController
                 ];
             }
             
-                        $invoiceData = InvoiceRequestDto::from($validatedData);
+            $invoiceData = InvoiceRequestDto::fromArray($validatedData);
             $invoice = $this->invoiceManager->createInvoice($invoiceData);
 
             return redirect()
@@ -173,7 +174,7 @@ class InvoiceController extends BaseController
                 ];
             }
             
-                        $invoiceData = InvoiceRequestDto::from($requestData);
+            $invoiceData = InvoiceRequestDto::fromArray($requestData);
 
             // Appel à l'API pour obtenir les totaux calculés
             $response = $this->apiClient->createInvoice($invoiceData);
@@ -240,7 +241,10 @@ class InvoiceController extends BaseController
      */
     private function generatePdf(Invoice $invoice, string $template, string $format): string
     {
-        // TODO: Implémenter la génération PDF avec DomPDF ou similaire
-        return "PDF content for invoice {$invoice->uid}";
+        $view = view("lara-sgmef-qr::templates.{$template}", compact('invoice'));
+
+        return Pdf::loadHTML($view->render())
+            ->setPaper($format)
+            ->output();
     }
 }

@@ -16,7 +16,7 @@ use Banelsems\LaraSgmefQr\Exceptions\InvoiceException;
 use Banelsems\LaraSgmefQr\Exceptions\SgmefApiException;
 use Banelsems\LaraSgmefQr\Models\Invoice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\TestCase;
+use Orchestra\Testbench\TestCase;
 use Mockery;
 
 /**
@@ -32,6 +32,9 @@ class InvoiceManagerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        if (!class_exists(\Spatie\LaravelData\Data::class)) {
+            $this->markTestSkipped('spatie/laravel-data non installé dans cet environnement');
+        }
         
         $this->apiClient = Mockery::mock(SgmefApiClientInterface::class);
         $this->invoiceManager = new InvoiceManager($this->apiClient);
@@ -41,6 +44,21 @@ class InvoiceManagerTest extends TestCase
     {
         Mockery::close();
         parent::tearDown();
+    }
+
+    protected function getPackageProviders($app)
+    {
+        return [\Banelsems\LaraSgmefQr\Providers\LaraSgmefQRServiceProvider::class];
+    }
+
+    protected function defineEnvironment($app): void
+    {
+        $app['config']->set('database.default', 'sqlite');
+        $app['config']->set('database.connections.sqlite', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
     }
 
     /**

@@ -7,6 +7,7 @@ namespace Banelsems\LaraSgmefQr\Providers;
 use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
 use Banelsems\LaraSgmefQr\Services\SgmefApiClient;
+use Banelsems\LaraSgmefQr\Console\Commands\CheckConfigCommand;
 use Banelsems\LaraSgmefQr\Commands\EmecefGenerateDeclaration;
 use Banelsems\LaraSgmefQr\Services\DeclarationGeneratorService;
 use Banelsems\LaraSgmefQr\Services\InvoiceManager;
@@ -71,6 +72,7 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 EmecefGenerateDeclaration::class,
+                CheckConfigCommand::class,
             ]);
         }
 

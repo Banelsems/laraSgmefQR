@@ -45,6 +45,20 @@ class InvoiceRequestDto extends Data
         public readonly ?string $reference = null
     ) {}
 
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            ifu: $data['ifu'],
+            type: $data['type'],
+            items: InvoiceItemDto::collection($data['items']),
+            client: ClientDto::from($data['client']),
+            operator: OperatorDto::from($data['operator']),
+            payment: PaymentDto::collection($data['payment']),
+            aib: $data['aib'] ?? null,
+            reference: $data['reference'] ?? null
+        );
+    }
+
     public static function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator) {

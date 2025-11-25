@@ -120,7 +120,34 @@ SGMEF_LOGGING_ENABLED=true
 SGMEF_LOG_LEVEL=info
 ```
 
-## 📖 Guide d'Utilisation
+## 🔒 Sécurité
+
+**IMPORTANT :** Par défaut, l'interface web du package est accessible publiquement. Pour des raisons de sécurité, il est **fortement recommandé** de protéger son accès en production.
+
+### Comment Sécuriser l'Interface Web ?
+
+La méthode la plus simple est d'ajouter un middleware d'authentification dans le fichier de configuration du package.
+
+1.  **Publiez la configuration** si ce n'est pas déjà fait :
+    ```bash
+    php artisan vendor:publish --tag=lara-sgmef-qr-config
+    ```
+
+2.  **Modifiez le fichier `config/lara_sgmef_qr.php`** pour y ajouter votre middleware d'authentification (par exemple, `auth`):
+
+    ```php
+    // config/lara_sgmef_qr.php
+    
+    'web_interface' => [
+        'enabled' => env('SGMEF_WEB_INTERFACE_ENABLED', true),
+        // Protégez l'accès avec le middleware d'authentification de votre application
+        'middleware' => ['web', 'auth'], 
+        'route_prefix' => env('SGMEF_ROUTE_PREFIX', 'sgmef'),
+    ],
+    ```
+
+En faisant cela, seules les personnes authentifiées sur votre application pourront accéder à l'interface de facturation.
+
 
 ### 🎯 Utilisation Basique
 
@@ -169,15 +196,15 @@ $payments = [
 ];
 
 // Création de la facture
-$invoiceData = new InvoiceRequestDto(
-    ifu: config('lara_sgmef_qr.default_ifu'),
-    type: 'FV', // Facture de Vente
-    items: $items,
-    client: $client,
-    operator: $operator,
-    payment: $payments,
-    aib: 'A' // AIB 1%
-);
+    $invoiceData = InvoiceRequestDto::fromArray([
+        'ifu' => config('lara_sgmef_qr.default_ifu'),
+        'type' => 'FV', // Facture de Vente
+        'items' => $items,
+        'client' => $client,
+        'operator' => $operator,
+        'payment' => $payments,
+        'aib' => 'A' // AIB 1%
+    ]);
 
 try {
     $invoice = $invoiceManager->createInvoice($invoiceData);

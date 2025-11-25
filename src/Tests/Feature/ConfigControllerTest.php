@@ -4,7 +4,7 @@ namespace Banelsems\LaraSgmefQr\Tests\Feature;
 
 use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\TestCase;
+use Orchestra\Testbench\TestCase;
 use Illuminate\Support\Facades\Config;
 use Mockery;
 
@@ -23,6 +23,21 @@ class ConfigControllerTest extends TestCase
         
         $this->apiClient = Mockery::mock(SgmefApiClientInterface::class);
         $this->app->instance(SgmefApiClientInterface::class, $this->apiClient);
+    }
+
+    protected function getPackageProviders($app)
+    {
+        return [\Banelsems\LaraSgmefQr\Providers\LaraSgmefQRServiceProvider::class];
+    }
+
+    protected function defineEnvironment($app): void
+    {
+        $app['config']->set('database.default', 'sqlite');
+        $app['config']->set('database.connections.sqlite', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
     }
 
     protected function tearDown(): void

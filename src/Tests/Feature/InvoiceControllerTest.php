@@ -7,7 +7,7 @@ use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\Enums\InvoiceStatusEnum;
 use Banelsems\LaraSgmefQr\Models\Invoice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\TestCase;
+use Orchestra\Testbench\TestCase;
 use Mockery;
 
 /**
@@ -35,6 +35,21 @@ class InvoiceControllerTest extends TestCase
     {
         Mockery::close();
         parent::tearDown();
+    }
+
+    protected function getPackageProviders($app)
+    {
+        return [\Banelsems\LaraSgmefQr\Providers\LaraSgmefQRServiceProvider::class];
+    }
+
+    protected function defineEnvironment($app): void
+    {
+        $app['config']->set('database.default', 'sqlite');
+        $app['config']->set('database.connections.sqlite', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
     }
 
     /**

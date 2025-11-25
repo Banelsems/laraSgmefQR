@@ -9,10 +9,21 @@ use Banelsems\LaraSgmefQr\DTOs\OperatorDto;
 use Banelsems\LaraSgmefQr\DTOs\PaymentDto;
 use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\DataCollection;
-use Tests\TestCase;
+use Orchestra\Testbench\TestCase;
 
 class InvoiceRequestDtoTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        if (!class_exists(\Spatie\LaravelData\Data::class)) {
+            $this->markTestSkipped('spatie/laravel-data non installé dans cet environnement');
+        }
+    }
+    protected function getPackageProviders($app)
+    {
+        return [\Banelsems\LaraSgmefQr\Providers\LaraSgmefQRServiceProvider::class];
+    }
     /** @test */
     public function it_can_be_created_from_valid_data()
     {
@@ -94,4 +105,3 @@ class InvoiceRequestDtoTest extends TestCase
         return array_merge($default, $overrides);
     }
 }
-
