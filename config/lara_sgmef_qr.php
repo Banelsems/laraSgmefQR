@@ -9,6 +9,8 @@ return [
     ),
     'token' => env('SGMEF_TOKEN'),
     'default_ifu' => env('SGMEF_DEFAULT_IFU'),
+    'verification_url' => env('SGMEF_VERIFICATION_URL', 'https://developper.impots.bj/sygmef-test/verification'),
+    'pending_invoice_ttl_seconds' => (int) env('SGMEF_PENDING_INVOICE_TTL', 120),
     'default_operator' => [
         'name' => env('SGMEF_DEFAULT_OPERATOR_NAME', 'Opérateur Principal'),
         'id' => env('SGMEF_DEFAULT_OPERATOR_ID', '1'),
@@ -28,6 +30,11 @@ return [
         'enabled' => env('SGMEF_WEB_INTERFACE_ENABLED', true),
         'middleware' => ['web'],
         'route_prefix' => env('SGMEF_ROUTE_PREFIX', 'sgmef'),
+        'polling_seconds' => (int) env('SGMEF_POLLING_SECONDS', 30),
+    ],
+    'queue' => [
+        'enabled' => env('SGMEF_QUEUE_ENABLED', false),
+        'connection' => env('SGMEF_QUEUE_CONNECTION', env('QUEUE_CONNECTION', 'sync')),
     ],
     'templates' => [
         'default' => 'default_a4',
@@ -87,4 +94,5 @@ return [
             ],
         ],
     ],
+    'emecef_test_cases' => require __DIR__ . '/emecef_test_cases.php',
 ];

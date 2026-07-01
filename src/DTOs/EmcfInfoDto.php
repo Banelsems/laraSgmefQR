@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\DTOs;
 
 use Spatie\LaravelData\Data;
@@ -10,5 +12,6 @@ class EmcfInfoDto extends Data
         public string $nim,
         public string $serial,
         public string $type
-    ) {}
+    ) {
+    }
 }

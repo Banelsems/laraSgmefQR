@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Tests\Unit\Services;
 
-use Banelsems\LaraSgmefQr\Services\SgmefApiClient;
-use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
 use Banelsems\LaraSgmefQr\DTOs\ClientDto;
-use Banelsems\LaraSgmefQr\DTOs\OperatorDto;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceItemDto;
+use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
+use Banelsems\LaraSgmefQr\DTOs\OperatorDto;
 use Banelsems\LaraSgmefQr\DTOs\PaymentDto;
 use Banelsems\LaraSgmefQr\Exceptions\SgmefApiException;
+use Banelsems\LaraSgmefQr\Services\SgmefApiClient;
 use Illuminate\Http\Client\Factory as HttpClient;
 use Illuminate\Http\Client\Response;
 use Mockery;
@@ -28,7 +30,7 @@ class SgmefApiClientTest extends TestCase
         if (!class_exists(\Spatie\LaravelData\Data::class)) {
             $this->markTestSkipped('spatie/laravel-data non installé dans cet environnement');
         }
-        
+
         $this->httpClient = Mockery::mock(HttpClient::class);
         $this->apiClient = new SgmefApiClient(
             $this->httpClient,
@@ -55,7 +57,7 @@ class SgmefApiClientTest extends TestCase
     public function test_can_get_status(): void
     {
         $expectedResponse = ['status' => 'OK', 'ifu' => '1234567890123', 'emcf_info' => []];
-        
+
         $response = Mockery::mock(Response::class);
         $response->shouldReceive('successful')->andReturn(true);
         $response->shouldReceive('json')->andReturn($expectedResponse);
@@ -70,19 +72,21 @@ class SgmefApiClientTest extends TestCase
                 'Accept' => 'application/json',
             ])
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('withOptions')
-            ->with(Mockery::on(function ($opts) { return is_array($opts) && ($opts['timeout'] ?? null) === 30; }))
+            ->with(Mockery::on(function ($opts) {
+                return is_array($opts) && ($opts['timeout'] ?? null) === 30;
+            }))
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('get')
             ->with('https://test-api.example.com/api/info/status', [])
             ->andReturn($response);
 
         $result = $this->apiClient->getStatus();
-        
+
         $this->assertEquals('OK', $result->status);
     }
 
@@ -109,9 +113,9 @@ class SgmefApiClientTest extends TestCase
             'uid' => 'test-uid-123',
             'totalAmount' => 1000,
             'totalTaxAmount' => 180,
-            'status' => 'pending'
+            'status' => 'pending',
         ];
-        
+
         $response = Mockery::mock(Response::class);
         $response->shouldReceive('successful')->andReturn(true);
         $response->shouldReceive('json')->andReturn($expectedResponse);
@@ -119,19 +123,19 @@ class SgmefApiClientTest extends TestCase
         $this->httpClient
             ->shouldReceive('withHeaders')
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('withOptions')
             ->with(Mockery::type('array'))
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('post')
             ->with('https://test-api.example.com/api/invoice', $invoiceData->toArray())
             ->andReturn($response);
 
         $result = $this->apiClient->createInvoice($invoiceData);
-        
+
         $this->assertEquals('test-uid-123', $result->uid);
         $this->assertEquals(1000, $result->totalAmount);
         $this->assertEquals(180, $result->totalTaxAmount);
@@ -149,9 +153,9 @@ class SgmefApiClientTest extends TestCase
             'codeMECeFDGI' => 'MECF123456',
             'counters' => 'CTR123',
             'nim' => 'NIM123456',
-            'errorCode' => 'OK'
+            'errorCode' => 'OK',
         ];
-        
+
         $response = Mockery::mock(Response::class);
         $response->shouldReceive('successful')->andReturn(true);
         $response->shouldReceive('json')->andReturn($expectedResponse);
@@ -159,19 +163,19 @@ class SgmefApiClientTest extends TestCase
         $this->httpClient
             ->shouldReceive('withHeaders')
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('withOptions')
             ->with(Mockery::type('array'))
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('put')
             ->with('https://test-api.example.com/api/invoice/test-uid-123/confirm', [])
             ->andReturn($response);
 
         $result = $this->apiClient->confirmInvoice($uid);
-        
+
         $this->assertEquals('2023-07-02T15:22:34+00:00', $result->dateTime);
         $this->assertEquals('QR123456789', $result->qrCode);
         $this->assertEquals('MECF123456', $result->codeMECeFDGI);
@@ -191,19 +195,19 @@ class SgmefApiClientTest extends TestCase
         $this->httpClient
             ->shouldReceive('withHeaders')
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('withOptions')
             ->with(Mockery::type('array'))
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('get')
             ->andReturn($response);
 
         $this->expectException(SgmefApiException::class);
         $this->expectExceptionMessage('Erreur API SyGM-eMCF [400]: Bad Request');
-        
+
         $this->apiClient->getStatus();
     }
 
@@ -213,7 +217,7 @@ class SgmefApiClientTest extends TestCase
     public function test_can_set_credentials(): void
     {
         $this->apiClient->setCredentials('new-token');
-        
+
         // Vérifier que le nouveau token est utilisé
         $response = Mockery::mock(Response::class);
         $response->shouldReceive('successful')->andReturn(true);
@@ -228,16 +232,18 @@ class SgmefApiClientTest extends TestCase
                 'Accept' => 'application/json',
             ])
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('withOptions')
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('get')
             ->andReturn($response);
 
-        $this->apiClient->getStatus();
+        $result = $this->apiClient->getStatus();
+
+        $this->assertEquals('OK', $result->status);
     }
 
     /**
@@ -246,7 +252,7 @@ class SgmefApiClientTest extends TestCase
     public function test_can_set_base_url(): void
     {
         $this->apiClient->setBaseUrl('https://new-api.example.com');
-        
+
         // Vérifier que la nouvelle URL est utilisée
         $response = Mockery::mock(Response::class);
         $response->shouldReceive('successful')->andReturn(true);
@@ -255,17 +261,19 @@ class SgmefApiClientTest extends TestCase
         $this->httpClient
             ->shouldReceive('withHeaders')
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('withOptions')
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('get')
-            ->with('https://new-api.example.com/info/status', [])
+            ->with('https://new-api.example.com/api/info/status', [])
             ->andReturn($response);
 
-        $this->apiClient->getStatus();
+        $result = $this->apiClient->getStatus();
+
+        $this->assertEquals('OK', $result->status);
     }
 
     /**
@@ -273,11 +281,8 @@ class SgmefApiClientTest extends TestCase
      */
     public function test_can_get_tax_groups(): void
     {
-        $expectedResponse = [
-            ['code' => 'A', 'name' => 'Exonéré', 'rate' => 0],
-            ['code' => 'B', 'name' => 'TVA 18%', 'rate' => 18]
-        ];
-        
+        $expectedResponse = ['a' => 0, 'b' => 18];
+
         $response = Mockery::mock(Response::class);
         $response->shouldReceive('successful')->andReturn(true);
         $response->shouldReceive('json')->andReturn($expectedResponse);
@@ -286,18 +291,18 @@ class SgmefApiClientTest extends TestCase
         $this->httpClient
             ->shouldReceive('withHeaders')
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('withOptions')
             ->andReturnSelf();
-            
+
         $this->httpClient
             ->shouldReceive('get')
-            ->with('https://test-api.example.com/api/info/tax-groups', [])
+            ->with('https://test-api.example.com/api/info/taxGroups', [])
             ->andReturn($response);
 
         $result = $this->apiClient->getTaxGroups();
-        
+
         $this->assertCount(2, $result);
     }
 }

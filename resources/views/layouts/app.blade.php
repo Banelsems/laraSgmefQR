@@ -41,7 +41,7 @@
     
     @stack('styles')
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-gray-50 font-sans" x-data="{ dark: localStorage.getItem('sgmef_dark') === '1' }" x-bind:class="dark ? 'dark bg-gray-900' : 'bg-gray-50'">
     <div class="min-h-screen flex">
         <!-- Sidebar -->
         <aside class="w-64 bg-white shadow-lg">
@@ -97,6 +97,12 @@
                         </div>
                         
                         <div class="flex items-center space-x-4">
+                            <button type="button"
+                                    @click="dark = !dark; localStorage.setItem('sgmef_dark', dark ? '1' : '0')"
+                                    class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50"
+                                    title="Mode sombre">
+                                <i class="fas fa-moon"></i>
+                            </button>
                             @yield('header-actions')
                         </div>
                     </div>
@@ -144,6 +150,13 @@
     </div>
 
     @stack('scripts')
+    <style>
+        .dark .bg-white { background-color: #111827 !important; }
+        .dark .bg-gray-50 { background-color: #1f2937 !important; }
+        .dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700 { color: #f9fafb !important; }
+        .dark .text-gray-500 { color: #d1d5db !important; }
+        .dark .border-gray-200, .dark .border-gray-300 { border-color: #374151 !important; }
+    </style>
     @include('lara-sgmef-qr::partials.toast')
     <!-- Tooltips Alpine.js : rien à ajouter ici, ils sont inclus dans les partials -->
     <!-- Skeleton loader : à utiliser dans les vues lors des chargements -->

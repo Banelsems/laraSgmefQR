@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Http\Controllers;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -12,5 +14,7 @@ use Illuminate\Routing\Controller;
  */
 class BaseController extends Controller
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+    use AuthorizesRequests;
+    use DispatchesJobs;
+    use ValidatesRequests;
 }

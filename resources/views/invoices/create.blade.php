@@ -28,7 +28,7 @@
                 <div>
                     <label for="ifu" class="block text-sm font-medium text-gray-700 mb-2">
     IFU de l'entreprise <span class="text-red-500">*</span>
-    @include('partials.tooltip', ['text' => 'Identifiant Fiscal Unique. 13 chiffres.'])
+    @include('lara-sgmef-qr::partials.tooltip', ['text' => 'Identifiant Fiscal Unique. 13 chiffres.'])
 </label>
                     <input type="text" 
                            id="ifu" 
@@ -55,7 +55,7 @@
                             required>
                         <option value="">Sélectionner un type</option>
                         @foreach($invoiceTypes ?? [] as $type)
-                            <option value="{{ $type['code'] }}">{{ $type['name'] }}</option>
+                            <option value="{{ $type['type'] ?? $type['code'] }}">{{ $type['description'] ?? $type['name'] ?? ($type['type'] ?? $type['code']) }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -73,6 +73,18 @@
                         <option value="A">A (1%)</option>
                         <option value="B">B (5%)</option>
                     </select>
+                </div>
+
+                <div x-show="['FA', 'EA'].includes(form.type)">
+                    <label for="reference" class="block text-sm font-medium text-gray-700 mb-2">
+                        Référence facture originale <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text"
+                           id="reference"
+                           name="reference"
+                           x-model="form.reference"
+                           placeholder="UID de la facture originale"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
             </div>
         </div>
@@ -211,7 +223,7 @@
                                        x-model="item.price"
                                        placeholder="0.00"
                                        step="0.01"
-                                       min="0"
+                                       min="0.01"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                        required>
                             </div>
@@ -225,7 +237,8 @@
                                        :name="`items[${index}][quantity]`"
                                        x-model="item.quantity"
                                        placeholder="1"
-                                       min="1"
+                                       step="0.01"
+                                       min="0.01"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                        required>
                             </div>
@@ -241,9 +254,35 @@
                                         required>
                                     <option value="">Sélectionner</option>
                                     @foreach($taxGroups ?? [] as $taxGroup)
-                                        <option value="{{ $taxGroup['code'] }}">{{ $taxGroup['name'] }} ({{ $taxGroup['rate'] }}%)</option>
+                                        <option value="{{ $taxGroup['code'] }}">{{ $taxGroup['name'] ?? $taxGroup['code'] }} ({{ $taxGroup['rate'] ?? 0 }}%)</option>
                                     @endforeach
                                 </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Taxe spécifique</label>
+                                <input type="number"
+                                       :name="`items[${index}][taxSpecific]`"
+                                       x-model="item.taxSpecific"
+                                       step="0.01"
+                                       min="0"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Prix original</label>
+                                <input type="number"
+                                       :name="`items[${index}][originalPrice]`"
+                                       x-model="item.originalPrice"
+                                       step="0.01"
+                                       min="0.01"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Modification prix</label>
+                                <input type="text"
+                                       :name="`items[${index}][priceModification]`"
+                                       x-model="item.priceModification"
+                                       placeholder="REMISE"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                         </div>
                     </div>
@@ -285,13 +324,13 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Type <span class="text-red-500">*</span>
                                 </label>
-                                <select :name="`payment[${index}][type]`"
-                                        x-model="payment.type"
+                                <select :name="`payment[${index}][name]`"
+                                        x-model="payment.name"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                         required>
                                     <option value="">Sélectionner</option>
                                     @foreach($paymentTypes ?? [] as $paymentType)
-                                        <option value="{{ $paymentType['code'] }}">{{ $paymentType['name'] }}</option>
+                                        <option value="{{ $paymentType['type'] ?? $paymentType['code'] }}">{{ $paymentType['description'] ?? $paymentType['name'] ?? ($paymentType['type'] ?? $paymentType['code']) }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -306,7 +345,7 @@
                                        x-model="payment.amount"
                                        placeholder="0.00"
                                        step="0.01"
-                                       min="0"
+                                       min="0.01"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                        required>
                             </div>
@@ -353,6 +392,7 @@ function invoiceForm() {
             ifu: '{{ config('lara_sgmef_qr.default_ifu') }}',
             type: '',
             aib: '',
+            reference: '',
             operator: {
                 name: '{{ config('lara_sgmef_qr.default_operator.name') }}',
                 id: '{{ config('lara_sgmef_qr.default_operator.id') }}'
@@ -366,12 +406,15 @@ function invoiceForm() {
                     name: '',
                     price: '',
                     quantity: 1,
-                    taxGroup: ''
+                    taxGroup: '',
+                    taxSpecific: '',
+                    originalPrice: '',
+                    priceModification: ''
                 }
             ],
             payment: [
                 {
-                    type: '',
+                    name: '',
                     amount: ''
                 }
             ]
@@ -382,7 +425,10 @@ function invoiceForm() {
                 name: '',
                 price: '',
                 quantity: 1,
-                taxGroup: ''
+                taxGroup: '',
+                taxSpecific: '',
+                originalPrice: '',
+                priceModification: ''
             });
         },
 
@@ -394,7 +440,7 @@ function invoiceForm() {
 
         addPayment() {
             this.form.payment.push({
-                type: '',
+                name: '',
                 amount: ''
             });
         },

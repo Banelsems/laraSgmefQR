@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Tests\Unit\DTOs;
 
 use Banelsems\LaraSgmefQr\DTOs\ClientDto;
@@ -8,8 +10,8 @@ use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
 use Banelsems\LaraSgmefQr\DTOs\OperatorDto;
 use Banelsems\LaraSgmefQr\DTOs\PaymentDto;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\DataCollection;
 use Orchestra\Testbench\TestCase;
+use Spatie\LaravelData\DataCollection;
 
 class InvoiceRequestDtoTest extends TestCase
 {
@@ -80,8 +82,8 @@ class InvoiceRequestDtoTest extends TestCase
 
         $data = $this->getValidData([
             'payment' => [
-                ['name' => 'ESPECES', 'amount' => 100] // Montant incorrect
-            ]
+                ['name' => 'ESPECES', 'amount' => 100], // Montant incorrect
+            ],
         ]);
 
         InvoiceRequestDto::from($data);
@@ -95,10 +97,10 @@ class InvoiceRequestDtoTest extends TestCase
             'client' => ['name' => 'Test Client'],
             'operator' => ['id' => 1, 'name' => 'Test Operator'],
             'items' => [
-                ['name' => 'Test Item', 'price' => 1000, 'quantity' => 2, 'taxGroup' => 'B']
+                ['name' => 'Test Item', 'price' => 1000, 'quantity' => 2, 'taxGroup' => 'B'],
             ],
             'payment' => [
-                ['name' => 'ESPECES', 'amount' => 2000]
+                ['name' => 'ESPECES', 'amount' => 2000],
             ],
         ];
 

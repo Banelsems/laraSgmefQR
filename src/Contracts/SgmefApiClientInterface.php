@@ -1,11 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Contracts;
 
 use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceResponseDto;
 use Banelsems\LaraSgmefQr\DTOs\SecurityElementsDto;
-use Banelsems\LaraSgmefQr\DTOs\ApiStatusDto;
 
 /**
  * Interface pour le client API SyGM-eMCF
@@ -15,24 +16,24 @@ interface SgmefApiClientInterface
     /**
      * Vérifie le statut de l'API
      */
-        public function getStatus(): ApiStatusDto;
+    public function getStatus(): mixed;
 
     /**
      * Récupère la liste des groupes de taxes
      */
-        /** @return \Banelsems\LaraSgmefQr\DTOs\TaxGroupDto[] */
+    /** @return \Banelsems\LaraSgmefQr\DTOs\TaxGroupDto[] */
     public function getTaxGroups(): array;
 
     /**
      * Récupère la liste des types de factures
      */
-        /** @return \Banelsems\LaraSgmefQr\DTOs\InvoiceTypeDto[] */
+    /** @return \Banelsems\LaraSgmefQr\DTOs\InvoiceTypeDto[] */
     public function getInvoiceTypes(): array;
 
     /**
      * Récupère la liste des types de paiement
      */
-        /** @return \Banelsems\LaraSgmefQr\DTOs\PaymentTypeDto[] */
+    /** @return \Banelsems\LaraSgmefQr\DTOs\PaymentTypeDto[] */
     public function getPaymentTypes(): array;
 
     /**
@@ -48,12 +49,12 @@ interface SgmefApiClientInterface
     /**
      * Confirme une facture et récupère les éléments de sécurité
      */
-        public function confirmInvoice(string $uid, bool $withQrCode = false): SecurityElementsDto;
+    public function confirmInvoice(string $uid, bool $withQrCode = false): SecurityElementsDto;
 
     /**
      * Annule une facture
      */
-        public function cancelInvoice(string $uid): array;
+    public function cancelInvoice(string $uid): array;
 
     /**
      * Configure les credentials de l'API

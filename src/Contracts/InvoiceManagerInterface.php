@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Contracts;
 
 use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;

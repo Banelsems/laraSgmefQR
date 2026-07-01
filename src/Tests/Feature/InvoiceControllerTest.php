@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Tests\Feature;
 
 use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
@@ -7,8 +9,8 @@ use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\Enums\InvoiceStatusEnum;
 use Banelsems\LaraSgmefQr\Models\Invoice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Orchestra\Testbench\TestCase;
 use Mockery;
+use Orchestra\Testbench\TestCase;
 
 /**
  * Tests fonctionnels pour InvoiceController
@@ -23,10 +25,10 @@ class InvoiceControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->invoiceManager = Mockery::mock(InvoiceManagerInterface::class);
         $this->apiClient = Mockery::mock(SgmefApiClientInterface::class);
-        
+
         $this->app->instance(InvoiceManagerInterface::class, $this->invoiceManager);
         $this->app->instance(SgmefApiClientInterface::class, $this->apiClient);
     }
@@ -88,11 +90,11 @@ class InvoiceControllerTest extends TestCase
         $this->apiClient
             ->shouldReceive('getTaxGroups')
             ->andReturn([['code' => 'A', 'name' => 'Exonéré']]);
-            
+
         $this->apiClient
             ->shouldReceive('getPaymentTypes')
             ->andReturn([['code' => 'ESPECES', 'name' => 'Espèces']]);
-            
+
         $this->apiClient
             ->shouldReceive('getInvoiceTypes')
             ->andReturn([['code' => 'FV', 'name' => 'Facture de Vente']]);
@@ -114,30 +116,30 @@ class InvoiceControllerTest extends TestCase
             'type' => 'FV',
             'client' => [
                 'name' => 'John Doe',
-                'contact' => '+229 12345678'
+                'contact' => '+229 12345678',
             ],
             'operator' => [
                 'id' => 1,
-                'name' => 'Operator Test'
+                'name' => 'Operator Test',
             ],
             'items' => [
                 [
                     'name' => 'Article 1',
                     'price' => 1000,
                     'quantity' => 1,
-                    'taxGroup' => 'B'
-                ]
+                    'taxGroup' => 'B',
+                ],
             ],
             'payment' => [
                 [
                     'name' => 'ESPECES',
-                    'amount' => 1000
-                ]
-            ]
+                    'amount' => 1000,
+                ],
+            ],
         ];
 
         $invoice = Invoice::factory()->make(['uid' => 'test-uid-123']);
-        
+
         $this->invoiceManager
             ->shouldReceive('createInvoice')
             ->andReturn($invoice);
@@ -170,7 +172,7 @@ class InvoiceControllerTest extends TestCase
     public function test_can_view_invoice(): void
     {
         $invoice = Invoice::factory()->create(['uid' => 'test-uid-123']);
-        
+
         $this->invoiceManager
             ->shouldReceive('getInvoice')
             ->with('test-uid-123')
@@ -190,9 +192,9 @@ class InvoiceControllerTest extends TestCase
     {
         $invoice = Invoice::factory()->create([
             'uid' => 'test-uid-123',
-            'status' => InvoiceStatusEnum::CONFIRMED
+            'status' => InvoiceStatusEnum::CONFIRMED,
         ]);
-        
+
         $this->invoiceManager
             ->shouldReceive('confirmInvoice')
             ->with('test-uid-123')
@@ -211,9 +213,9 @@ class InvoiceControllerTest extends TestCase
     {
         $invoice = Invoice::factory()->create([
             'uid' => 'test-uid-123',
-            'status' => InvoiceStatusEnum::CANCELLED
+            'status' => InvoiceStatusEnum::CANCELLED,
         ]);
-        
+
         $this->invoiceManager
             ->shouldReceive('cancelInvoice')
             ->with('test-uid-123')
@@ -240,15 +242,15 @@ class InvoiceControllerTest extends TestCase
                     'name' => 'Article 1',
                     'price' => 1000,
                     'quantity' => 1,
-                    'taxGroup' => 'B'
-                ]
+                    'taxGroup' => 'B',
+                ],
             ],
             'payment' => [
                 [
                     'name' => 'ESPECES',
-                    'amount' => 1000
-                ]
-            ]
+                    'amount' => 1000,
+                ],
+            ],
         ];
 
         $apiResponse = new \Banelsems\LaraSgmefQr\DTOs\InvoiceResponseDto(
@@ -268,8 +270,8 @@ class InvoiceControllerTest extends TestCase
             'success' => true,
             'data' => [
                 'total_amount' => 1000,
-                'total_tax_amount' => 180
-            ]
+                'total_tax_amount' => 180,
+            ],
         ]);
     }
 
@@ -280,9 +282,9 @@ class InvoiceControllerTest extends TestCase
     {
         $invoice = Invoice::factory()->create([
             'uid' => 'test-uid-123',
-            'status' => InvoiceStatusEnum::CONFIRMED
+            'status' => InvoiceStatusEnum::CONFIRMED,
         ]);
-        
+
         $this->invoiceManager
             ->shouldReceive('getInvoice')
             ->with('test-uid-123')
@@ -301,9 +303,9 @@ class InvoiceControllerTest extends TestCase
     {
         $invoice = Invoice::factory()->create([
             'uid' => 'test-uid-123',
-            'status' => InvoiceStatusEnum::CONFIRMED
+            'status' => InvoiceStatusEnum::CONFIRMED,
         ]);
-        
+
         $this->invoiceManager
             ->shouldReceive('getInvoice')
             ->with('test-uid-123')
@@ -321,7 +323,7 @@ class InvoiceControllerTest extends TestCase
     public function test_can_sync_invoice(): void
     {
         $invoice = Invoice::factory()->create(['uid' => 'test-uid-123']);
-        
+
         $this->invoiceManager
             ->shouldReceive('syncInvoice')
             ->with('test-uid-123')

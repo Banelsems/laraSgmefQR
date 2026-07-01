@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\DTOs;
 
 use Spatie\LaravelData\Attributes\Validation\Required;
@@ -10,8 +12,8 @@ class OperatorDto extends Data
     public function __construct(
         #[Required]
         public readonly int|string $id,
-
         #[Required]
         public readonly string $name
-    ) {}
+    ) {
+    }
 }

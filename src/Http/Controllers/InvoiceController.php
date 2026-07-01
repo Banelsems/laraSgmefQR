@@ -1,19 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Http\Controllers;
 
 use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
 use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
-use Spatie\LaravelData\Exceptions\ValidationException;
 use Banelsems\LaraSgmefQr\Http\Requests\InvoiceRequest;
 use Banelsems\LaraSgmefQr\Models\Invoice;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Response;
+use Banelsems\LaraSgmefQr\Services\TaxCalculatorService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\View\View;
+use Spatie\LaravelData\Exceptions\ValidationException;
 
 /**
  * Contrôleur pour la gestion des factures
@@ -22,8 +25,10 @@ class InvoiceController extends BaseController
 {
     public function __construct(
         private readonly InvoiceManagerInterface $invoiceManager,
-        private readonly SgmefApiClientInterface $apiClient
-    ) {}
+        private readonly SgmefApiClientInterface $apiClient,
+        private readonly TaxCalculatorService $taxCalculator
+    ) {
+    }
 
     /**
      * Liste des factures
@@ -37,12 +42,38 @@ class InvoiceController extends BaseController
             $query->where('status', $request->input('status'));
         }
 
+        if ($request->filled('type')) {
+            $query->where('type', $request->input('type'));
+        }
+
+        if ($request->filled('ifu')) {
+            $query->where('ifu', $request->input('ifu'));
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->input('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->input('date_to'));
+        }
+
+        if ($request->filled('amount_min')) {
+            $query->where('total_amount', '>=', (float) $request->input('amount_min'));
+        }
+
+        if ($request->filled('amount_max')) {
+            $query->where('total_amount', '<=', (float) $request->input('amount_max'));
+        }
+
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('uid', 'like', "%{$search}%")
                   ->orWhere('customer_ifu', 'like', "%{$search}%")
-                  ->orWhere('mecf_code', 'like', "%{$search}%");
+                  ->orWhere('mecf_code', 'like', "%{$search}%")
+                  ->orWhere('reference', 'like', "%{$search}%")
+                  ->orWhere('raw_request->client->name', 'like', "%{$search}%");
             });
         }
 
@@ -56,13 +87,26 @@ class InvoiceController extends BaseController
      */
     public function create(): View
     {
-        $taxGroups = $this->apiClient->getTaxGroups();
-        $paymentTypes = $this->apiClient->getPaymentTypes();
-        $invoiceTypes = $this->apiClient->getInvoiceTypes();
+        try {
+            $taxGroups = $this->apiClient->getTaxGroups();
+            $paymentTypes = $this->apiClient->getPaymentTypes();
+            $invoiceTypes = $this->apiClient->getInvoiceTypes();
+        } catch (\Throwable) {
+            $taxGroups = collect(['A' => 0, 'B' => 18, 'C' => 19, 'D' => 23, 'E' => 0, 'F' => 0])
+                ->map(fn ($rate, $code) => ['code' => $code, 'name' => "Groupe {$code}", 'rate' => $rate])
+                ->values()
+                ->all();
+            $paymentTypes = collect(['ESPECES', 'VIREMENT', 'CARTEBANCAIRE', 'MOBILEMONEY', 'CHEQUES', 'CREDIT', 'AUTRE'])
+                ->map(fn ($type) => ['type' => $type, 'description' => $type])
+                ->all();
+            $invoiceTypes = collect(['FV', 'FA', 'EV', 'EA'])
+                ->map(fn ($type) => ['type' => $type, 'description' => $type])
+                ->all();
+        }
 
         return view('lara-sgmef-qr::invoices.create', compact(
             'taxGroups',
-            'paymentTypes', 
+            'paymentTypes',
             'invoiceTypes'
         ));
     }
@@ -74,7 +118,7 @@ class InvoiceController extends BaseController
     {
         try {
             $validatedData = $request->validated();
-            
+
             // S'assurer qu'un opérateur est toujours défini
             if (empty($validatedData['operator']['name']) || empty($validatedData['operator']['id'])) {
                 $validatedData['operator'] = [
@@ -82,14 +126,13 @@ class InvoiceController extends BaseController
                     'id' => config('lara_sgmef_qr.default_operator.id', '1'),
                 ];
             }
-            
+
             $invoiceData = InvoiceRequestDto::fromArray($validatedData);
             $invoice = $this->invoiceManager->createInvoice($invoiceData);
 
             return redirect()
                 ->route('sgmef.invoices.show', $invoice->uid)
                 ->with('success', 'Facture créée avec succès !');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -103,7 +146,7 @@ class InvoiceController extends BaseController
     public function show(string $uid): View
     {
         $invoice = $this->invoiceManager->getInvoice($uid);
-        
+
         return view('lara-sgmef-qr::invoices.show', compact('invoice'));
     }
 
@@ -118,7 +161,6 @@ class InvoiceController extends BaseController
             return redirect()
                 ->route('sgmef.invoices.show', $uid)
                 ->with('success', 'Facture confirmée avec succès !');
-
         } catch (\Exception $e) {
             return back()->withErrors(['confirm' => $e->getMessage()]);
         }
@@ -135,7 +177,6 @@ class InvoiceController extends BaseController
             return redirect()
                 ->route('sgmef.invoices.show', $uid)
                 ->with('success', 'Facture annulée avec succès !');
-
         } catch (\Exception $e) {
             return back()->withErrors(['cancel' => $e->getMessage()]);
         }
@@ -152,7 +193,6 @@ class InvoiceController extends BaseController
             return redirect()
                 ->route('sgmef.invoices.show', $uid)
                 ->with('success', 'Facture synchronisée avec succès !');
-
         } catch (\Exception $e) {
             return back()->withErrors(['sync' => $e->getMessage()]);
         }
@@ -165,7 +205,7 @@ class InvoiceController extends BaseController
     {
         try {
             $requestData = $request->all();
-            
+
             // S'assurer qu'un opérateur est toujours défini
             if (empty($requestData['operator']['name']) || empty($requestData['operator']['id'])) {
                 $requestData['operator'] = [
@@ -173,22 +213,21 @@ class InvoiceController extends BaseController
                     'id' => config('lara_sgmef_qr.default_operator.id', '1'),
                 ];
             }
-            
+
             $invoiceData = InvoiceRequestDto::fromArray($requestData);
 
-            // Appel à l'API pour obtenir les totaux calculés
-            $response = $this->apiClient->createInvoice($invoiceData);
+            $summary = $this->taxCalculator->calculateInvoice($invoiceData->items);
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'total_amount' => $response->totalAmount,
-                    'total_tax_amount' => $response->totalTaxAmount,
-                    'total_aib_amount' => $response->totalAibAmount,
-                    'items' => $response->items,
-                ]
+                    'total_amount' => $summary['base'],
+                    'total_with_tax' => $summary['total'],
+                    'total_tax_amount' => $summary['tax'],
+                    'total_aib_amount' => $summary['aib'],
+                    'by_group' => $summary['by_group'],
+                ],
             ]);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -198,7 +237,7 @@ class InvoiceController extends BaseController
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }
@@ -209,7 +248,7 @@ class InvoiceController extends BaseController
     public function downloadPdf(string $uid, Request $request): Response
     {
         $invoice = $this->invoiceManager->getInvoice($uid);
-        
+
         if (!$invoice->isConfirmed()) {
             abort(400, 'Seules les factures confirmées peuvent être téléchargées en PDF');
         }
@@ -231,7 +270,7 @@ class InvoiceController extends BaseController
     public function print(string $uid, ?string $template = null): View
     {
         $invoice = $this->invoiceManager->getInvoice($uid);
-        $template = $template ?? config('lara_sgmef_qr.templates.default');
+        $template ??= config('lara_sgmef_qr.templates.default');
 
         return view("lara-sgmef-qr::templates.{$template}", compact('invoice'));
     }

@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Http\Controllers;
 
 use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\Http\Requests\ConfigRequest;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 /**
  * Contrôleur pour la configuration du package
@@ -16,7 +18,8 @@ class ConfigController extends BaseController
 {
     public function __construct(
         private readonly SgmefApiClientInterface $apiClient
-    ) {}
+    ) {
+    }
 
     /**
      * Affiche la page de configuration
@@ -44,24 +47,23 @@ class ConfigController extends BaseController
     {
         try {
             $configPath = config_path('lara_sgmef_qr.php');
-            
+
             if (!file_exists($configPath)) {
                 return back()->withErrors(['config' => 'Fichier de configuration non trouvé. Veuillez publier la configuration d\'abord.']);
             }
 
             // Lire le fichier de configuration actuel
             $currentConfig = include $configPath;
-            
+
             // Mettre à jour avec les nouvelles valeurs
             $newConfig = $this->updateConfigArray($currentConfig, $request->validated());
-            
+
             // Écrire le nouveau fichier de configuration
             $this->writeConfigFile($configPath, $newConfig);
 
             return redirect()
                 ->route('sgmef.config.index')
                 ->with('success', 'Configuration sauvegardée avec succès !');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -79,7 +81,7 @@ class ConfigController extends BaseController
             if ($request->filled('api_url')) {
                 $this->apiClient->setBaseUrl($request->input('api_url'));
             }
-            
+
             if ($request->filled('token')) {
                 $this->apiClient->setCredentials($request->input('token'));
             }
@@ -90,13 +92,12 @@ class ConfigController extends BaseController
             return response()->json([
                 'success' => true,
                 'message' => 'Connexion réussie !',
-                'data' => $status
+                'data' => $status,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur de connexion : ' . $e->getMessage()
+                'message' => 'Erreur de connexion : ' . $e->getMessage(),
             ], 400);
         }
     }
@@ -147,7 +148,7 @@ class ConfigController extends BaseController
     private function writeConfigFile(string $path, array $config): void
     {
         $content = "<?php\n\nreturn " . var_export($config, true) . ";\n";
-        
+
         if (!file_put_contents($path, $content)) {
             throw new \Exception('Impossible d\'écrire le fichier de configuration');
         }

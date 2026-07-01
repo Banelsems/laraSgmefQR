@@ -1,35 +1,44 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Models;
 
+use Banelsems\LaraSgmefQr\Database\Factories\InvoiceFactory;
 use Banelsems\LaraSgmefQr\Enums\InvoiceStatusEnum;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Modèle Invoice pour le tracking complet des factures
- * 
- * @property int $id
- * @property string|null $uid UID retourné par l'API SyGM-eMCF
- * @property string $ifu IFU de l'émetteur
- * @property string|null $customer_ifu IFU du client
- * @property string $type Type de facture (FV, FA, EV, EA)
- * @property InvoiceStatusEnum $status Statut de la facture
- * @property float $total_amount Montant total de la facture
- * @property array|null $raw_request Données brutes de la requête
- * @property array|null $raw_response Données brutes de la réponse API
- * @property string|null $qr_code_data Données du QR code
- * @property string|null $mecf_code Code MECeF/DGI
- * @property \Carbon\Carbon|null $confirmed_at Date de confirmation
- * @property \Carbon\Carbon|null $cancelled_at Date d'annulation
- * @property \Carbon\Carbon $created_at
- * @property \Carbon\Carbon $updated_at
+ *
+ * @property int                 $id
+ * @property string|null         $uid               UID retourné par l'API SyGM-eMCF
+ * @property string              $ifu               IFU de l'émetteur
+ * @property string|null         $customer_ifu      IFU du client
+ * @property string              $type              Type de facture (FV, FA, EV, EA)
+ * @property InvoiceStatusEnum   $status            Statut de la facture
+ * @property float               $total_amount      Montant total de la facture
+ * @property string|null         $reference         Référence de facture originale pour FA/EA
+ * @property array|null          $raw_request       Données brutes de la requête
+ * @property array|null          $raw_response      Données brutes de la réponse API
+ * @property array|null          $security_elements Éléments de sécurité complets
+ * @property string|null         $qr_code_data      Données du QR code
+ * @property string|null         $mecf_code         Code MECeF/DGI
+ * @property string|null         $error_code        Code d'erreur local ou API
+ * @property string|null         $error_description Description de l'erreur
+ * @property \Carbon\Carbon|null $expires_at        Date limite de confirmation
+ * @property \Carbon\Carbon|null $confirmed_at      Date de confirmation
+ * @property \Carbon\Carbon|null $cancelled_at      Date d'annulation
+ * @property \Carbon\Carbon      $created_at
+ * @property \Carbon\Carbon      $updated_at
  * @property \Carbon\Carbon|null $deleted_at
  */
 class Invoice extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'uid',
@@ -37,11 +46,16 @@ class Invoice extends Model
         'customer_ifu',
         'type',
         'status',
+        'reference',
         'total_amount',
         'raw_request',
         'raw_response',
+        'security_elements',
         'qr_code_data',
         'mecf_code',
+        'error_code',
+        'error_description',
+        'expires_at',
         'confirmed_at',
         'cancelled_at',
     ];
@@ -51,6 +65,8 @@ class Invoice extends Model
         'total_amount' => 'decimal:2',
         'raw_request' => 'array',
         'raw_response' => 'array',
+        'security_elements' => 'array',
+        'expires_at' => 'datetime',
         'confirmed_at' => 'datetime',
         'cancelled_at' => 'datetime',
     ];
@@ -141,9 +157,16 @@ class Invoice extends Model
             'status' => $this->status->value,
             'has_qr_code' => !empty($this->qr_code_data),
             'has_mecf_code' => !empty($this->mecf_code),
+            'error_code' => $this->error_code,
+            'expires_at' => $this->expires_at?->toISOString(),
             'created_at' => $this->created_at?->toISOString(),
             'confirmed_at' => $this->confirmed_at?->toISOString(),
             'cancelled_at' => $this->cancelled_at?->toISOString(),
         ];
+    }
+
+    protected static function newFactory(): InvoiceFactory
+    {
+        return InvoiceFactory::new();
     }
 }

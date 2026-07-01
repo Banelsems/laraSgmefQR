@@ -49,7 +49,7 @@ class LaravelVersionHelper
     public static function getMajorVersion(): int
     {
         $version = Application::VERSION;
-        
+
         return (int) explode('.', $version)[0];
     }
 
@@ -61,7 +61,7 @@ class LaravelVersionHelper
         if (self::isLaravel11()) {
             return database_path('migrations');
         }
-        
+
         return database_path('migrations');
     }
 

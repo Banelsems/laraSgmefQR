@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Exceptions;
 
 use Exception;
@@ -10,7 +12,7 @@ use Exception;
 class SgmefApiException extends Exception
 {
     public function __construct(
-        string $message = "",
+        string $message = '',
         int $code = 0,
         ?Exception $previous = null,
         private readonly ?array $apiResponse = null

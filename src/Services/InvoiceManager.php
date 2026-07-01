@@ -10,10 +10,10 @@ use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
 use Banelsems\LaraSgmefQr\Enums\InvoiceStatusEnum;
 use Banelsems\LaraSgmefQr\Exceptions\InvoiceException;
 use Banelsems\LaraSgmefQr\Exceptions\SgmefApiException;
-use Spatie\LaravelData\Exceptions\ValidationException;
 use Banelsems\LaraSgmefQr\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Spatie\LaravelData\Exceptions\ValidationException;
 
 /**
  * Gestionnaire de factures - Logique métier centralisée
@@ -22,7 +22,8 @@ class InvoiceManager implements InvoiceManagerInterface
 {
     public function __construct(
         private readonly SgmefApiClientInterface $apiClient
-    ) {}
+    ) {
+    }
 
     /**
      * Crée une nouvelle facture
@@ -31,7 +32,7 @@ class InvoiceManager implements InvoiceManagerInterface
     {
         return DB::transaction(function () use ($invoiceData) {
             try {
-                // La validation est maintenant gérée par le DTO. Une ValidationException sera levée si les données sont invalides.
+                $this->validateInvoiceData($invoiceData);
                 $apiResponse = $this->apiClient->createInvoice($invoiceData);
 
                 $invoice = Invoice::create([
@@ -40,7 +41,9 @@ class InvoiceManager implements InvoiceManagerInterface
                     'customer_ifu' => $invoiceData->client->ifu,
                     'type' => $invoiceData->type,
                     'status' => InvoiceStatusEnum::PENDING,
-                    'total_amount' => $apiResponse->totalAmount,
+                    'reference' => $invoiceData->reference,
+                    'total_amount' => $apiResponse->totalAmount ?? $this->calculateRequestTotal($invoiceData),
+                    'expires_at' => now()->addMinutes(2),
                     'raw_request' => $invoiceData->toArray(),
                     'raw_response' => $apiResponse->toArray(),
                 ]);
@@ -48,17 +51,23 @@ class InvoiceManager implements InvoiceManagerInterface
                 Log::info('Facture créée avec succès', [
                     'invoice_id' => $invoice->id,
                     'uid' => $invoice->uid,
-                    'total_amount' => $invoice->total_amount
+                    'total_amount' => $invoice->total_amount,
                 ]);
 
                 return $invoice;
-
             } catch (ValidationException $e) {
                 throw new InvoiceException('Données de facture invalides: ' . implode(', ', array_keys($e->errors())));
             } catch (SgmefApiException $e) {
                 Log::error('Erreur API lors de la création de facture', [
                     'error' => $e->getMessage(),
-                    'request_data' => $invoiceData->toArray()
+                    'request_summary' => [
+                        'ifu' => $invoiceData->ifu,
+                        'customer_ifu_present' => filled($invoiceData->client->ifu),
+                        'type' => $invoiceData->type,
+                        'reference_present' => filled($invoiceData->reference),
+                        'items_count' => count($invoiceData->items),
+                        'payments_count' => count($invoiceData->payment),
+                    ],
                 ]);
 
                 // Créer quand même l'enregistrement avec le statut erreur
@@ -68,6 +77,10 @@ class InvoiceManager implements InvoiceManagerInterface
                     'customer_ifu' => $invoiceData->client->ifu,
                     'type' => $invoiceData->type,
                     'status' => InvoiceStatusEnum::ERROR,
+                    'reference' => $invoiceData->reference,
+                    'total_amount' => $this->calculateRequestTotal($invoiceData),
+                    'error_code' => (string) $e->getCode(),
+                    'error_description' => $e->getMessage(),
                     'raw_request' => $invoiceData->toArray(),
                     'raw_response' => ['error' => $e->getMessage()],
                 ]);
@@ -99,13 +112,27 @@ class InvoiceManager implements InvoiceManagerInterface
                 // Appel à l'API pour confirmer la facture
                 $securityElements = $this->apiClient->confirmInvoice($invoice->uid);
 
-                // Vérification des erreurs dans la réponse
-                
+                if ($securityElements->hasError()) {
+                    $invoice->update([
+                        'status' => InvoiceStatusEnum::ERROR,
+                        'error_code' => $securityElements->errorCode,
+                        'error_description' => $securityElements->errorDesc,
+                        'security_elements' => $securityElements->toArray(),
+                    ]);
+
+                    throw new InvoiceException(
+                        "Erreur lors de la confirmation: {$securityElements->errorCode}: {$securityElements->errorDesc}"
+                    );
+                }
+
                 // Mise à jour avec les éléments de sécurité
                 $invoice->update([
                     'status' => InvoiceStatusEnum::CONFIRMED,
                     'qr_code_data' => $securityElements->qrCode,
                     'mecf_code' => $securityElements->codeMECeFDGI,
+                    'security_elements' => $securityElements->toArray(),
+                    'error_code' => null,
+                    'error_description' => null,
                     'confirmed_at' => now(),
                     'raw_response' => array_merge(
                         $invoice->raw_response ?? [],
@@ -116,19 +143,20 @@ class InvoiceManager implements InvoiceManagerInterface
                 Log::info('Facture confirmée avec succès', [
                     'invoice_id' => $invoice->id,
                     'uid' => $invoice->uid,
-                    'mecf_code' => $invoice->mecf_code
+                    'mecf_code' => $invoice->mecf_code,
                 ]);
 
                 return $invoice;
-
             } catch (SgmefApiException $e) {
                 Log::error('Erreur API lors de la confirmation de facture', [
                     'uid' => $invoice->uid,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
 
                 $invoice->update([
                     'status' => InvoiceStatusEnum::ERROR,
+                    'error_code' => (string) $e->getCode(),
+                    'error_description' => $e->getMessage(),
                     'raw_response' => array_merge(
                         $invoice->raw_response ?? [],
                         ['confirmation_error' => $e->getMessage()]
@@ -174,15 +202,14 @@ class InvoiceManager implements InvoiceManagerInterface
 
                 Log::info('Facture annulée avec succès', [
                     'invoice_id' => $invoice->id,
-                    'uid' => $invoice->uid
+                    'uid' => $invoice->uid,
                 ]);
 
                 return $invoice;
-
             } catch (SgmefApiException $e) {
                 Log::error('Erreur API lors de l\'annulation de facture', [
                     'uid' => $invoice->uid,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
 
                 throw new InvoiceException(
@@ -225,15 +252,14 @@ class InvoiceManager implements InvoiceManagerInterface
 
             Log::info('Facture synchronisée', [
                 'invoice_id' => $invoice->id,
-                'uid' => $invoice->uid
+                'uid' => $invoice->uid,
             ]);
 
             return $invoice;
-
         } catch (SgmefApiException $e) {
             Log::warning('Erreur lors de la synchronisation', [
                 'uid' => $invoice->uid,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             throw new InvoiceException(
@@ -256,5 +282,31 @@ class InvoiceManager implements InvoiceManagerInterface
         }
 
         return $invoice;
+    }
+
+    private function calculateRequestTotal(InvoiceRequestDto $invoiceData): float
+    {
+        return collect($invoiceData->items)->sum(function ($item): float {
+            return (float) $item->price * (float) $item->quantity;
+        });
+    }
+
+    private function validateInvoiceData(InvoiceRequestDto $invoiceData): void
+    {
+        if (!preg_match('/^\d{13}$/', $invoiceData->ifu)) {
+            throw new InvoiceException('Données de facture invalides: ifu');
+        }
+
+        if (blank($invoiceData->client->name)) {
+            throw new InvoiceException('Données de facture invalides: client.name');
+        }
+
+        if (in_array($invoiceData->type, ['FA', 'EA'], true) && blank($invoiceData->reference)) {
+            throw new InvoiceException('Données de facture invalides: reference');
+        }
+
+        if (abs($this->calculateRequestTotal($invoiceData) - collect($invoiceData->payment)->sum('amount')) > 0.01) {
+            throw new InvoiceException('Données de facture invalides: payment');
+        }
     }
 }

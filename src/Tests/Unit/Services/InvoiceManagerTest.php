@@ -1,23 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Tests\Unit\Services;
 
-use Banelsems\LaraSgmefQr\Services\InvoiceManager;
 use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
+use Banelsems\LaraSgmefQr\DTOs\ClientDto;
+use Banelsems\LaraSgmefQr\DTOs\InvoiceItemDto;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceResponseDto;
-use Banelsems\LaraSgmefQr\DTOs\SecurityElementsDto;
-use Banelsems\LaraSgmefQr\DTOs\ClientDto;
 use Banelsems\LaraSgmefQr\DTOs\OperatorDto;
-use Banelsems\LaraSgmefQr\DTOs\InvoiceItemDto;
 use Banelsems\LaraSgmefQr\DTOs\PaymentDto;
+use Banelsems\LaraSgmefQr\DTOs\SecurityElementsDto;
 use Banelsems\LaraSgmefQr\Enums\InvoiceStatusEnum;
 use Banelsems\LaraSgmefQr\Exceptions\InvoiceException;
 use Banelsems\LaraSgmefQr\Exceptions\SgmefApiException;
 use Banelsems\LaraSgmefQr\Models\Invoice;
+use Banelsems\LaraSgmefQr\Services\InvoiceManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Orchestra\Testbench\TestCase;
 use Mockery;
+use Orchestra\Testbench\TestCase;
 
 /**
  * Tests unitaires pour InvoiceManager
@@ -35,7 +37,7 @@ class InvoiceManagerTest extends TestCase
         if (!class_exists(\Spatie\LaravelData\Data::class)) {
             $this->markTestSkipped('spatie/laravel-data non installé dans cet environnement');
         }
-        
+
         $this->apiClient = Mockery::mock(SgmefApiClientInterface::class);
         $this->invoiceManager = new InvoiceManager($this->apiClient);
     }
@@ -67,7 +69,7 @@ class InvoiceManagerTest extends TestCase
     public function test_can_create_invoice_successfully(): void
     {
         $invoiceData = $this->createValidInvoiceRequestDto();
-        
+
         $apiResponse = new InvoiceResponseDto(
             'test-uid-123',
             1000,
@@ -99,7 +101,7 @@ class InvoiceManagerTest extends TestCase
     public function test_create_invoice_handles_api_error(): void
     {
         $invoiceData = $this->createValidInvoiceRequestDto();
-        
+
         $this->apiClient
             ->shouldReceive('createInvoice')
             ->with($invoiceData)

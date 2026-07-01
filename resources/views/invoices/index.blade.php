@@ -21,9 +21,9 @@
 <div class="space-y-6">
     <!-- Filtres -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <form method="GET" action="{{ route('sgmef.invoices.index') }}" class="flex flex-wrap items-end gap-4">
+        <form method="GET" action="{{ route('sgmef.invoices.index') }}" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-4">
             <!-- Recherche -->
-            <div class="flex-1 min-w-64">
+            <div class="xl:col-span-2">
                 <label for="search" class="block text-sm font-medium text-gray-700 mb-2">
                     Rechercher
                 </label>
@@ -36,7 +36,7 @@
             </div>
 
             <!-- Statut -->
-            <div class="min-w-48">
+            <div>
                 <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
                     Statut
                 </label>
@@ -51,15 +51,51 @@
                 </select>
             </div>
 
+            <div>
+                <label for="type" class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                <select id="type" name="type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Tous</option>
+                    @foreach(['FV', 'FA', 'EV', 'EA'] as $type)
+                        <option value="{{ $type }}" {{ request('type') === $type ? 'selected' : '' }}>{{ $type }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label for="ifu" class="block text-sm font-medium text-gray-700 mb-2">IFU émetteur</label>
+                <input type="text" id="ifu" name="ifu" value="{{ request('ifu') }}" maxlength="13" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div>
+                <label for="date_from" class="block text-sm font-medium text-gray-700 mb-2">Depuis</label>
+                <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div>
+                <label for="date_to" class="block text-sm font-medium text-gray-700 mb-2">Jusqu’au</label>
+                <input type="date" id="date_to" name="date_to" value="{{ request('date_to') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label for="amount_min" class="block text-sm font-medium text-gray-700 mb-2">Min</label>
+                    <input type="number" id="amount_min" name="amount_min" value="{{ request('amount_min') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="amount_max" class="block text-sm font-medium text-gray-700 mb-2">Max</label>
+                    <input type="number" id="amount_max" name="amount_max" value="{{ request('amount_max') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
             <!-- Actions -->
-            <div class="flex space-x-2">
+            <div class="flex space-x-2 xl:col-span-7">
                 <button type="submit" 
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     <i class="fas fa-search mr-2"></i>
                     Filtrer
                 </button>
                 
-                @if(request()->hasAny(['search', 'status']))
+                @if(request()->hasAny(['search', 'status', 'type', 'ifu', 'date_from', 'date_to', 'amount_min', 'amount_max']))
                     <a href="{{ route('sgmef.invoices.index') }}" 
                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         <i class="fas fa-times mr-2"></i>
@@ -108,6 +144,9 @@
                                         <div class="text-sm font-medium text-gray-900">
                                             {{ $invoice->uid ?? 'N/A' }}
                                         </div>
+                                        <div class="text-xs text-gray-500">
+                                            {{ $invoice->type }} @if($invoice->reference) · Réf: {{ $invoice->reference }} @endif
+                                        </div>
                                         @if($invoice->mecf_code)
                                             <div class="text-xs text-gray-500">
                                                 MECeF: {{ $invoice->mecf_code }}
@@ -118,7 +157,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex flex-col">
                                         <div class="text-sm text-gray-900">
-                                            {{ $invoice->client_name ?? 'N/A' }}
+                                            {{ data_get($invoice->raw_request, 'client.name', 'N/A') }}
                                         </div>
                                         @if($invoice->customer_ifu)
                                             <div class="text-xs text-gray-500">
@@ -129,21 +168,17 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">
-                                        {{ $invoice->operator_name ?? 'N/A' }}
+                                        {{ data_get($invoice->raw_request, 'operator.name', 'N/A') }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
                                         {{ number_format($invoice->total_amount ?? 0, 0, ',', ' ') }} FCFA
                                     </div>
-                                    @if($invoice->total_tax_amount)
-                                        <div class="text-xs text-gray-500">
-                                            Taxes: {{ number_format($invoice->total_tax_amount, 0, ',', ' ') }} FCFA
-                                        </div>
-                                    @endif
+                                    <div class="text-xs text-gray-500">IFU: {{ $invoice->ifu }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-    @include('partials.status-badge', ['status' => $invoice->status])
+    @include('lara-sgmef-qr::partials.status-badge', ['status' => $invoice->status])
 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ $invoice->created_at?->format('d/m/Y H:i') ?? 'N/A' }}

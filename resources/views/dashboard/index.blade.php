@@ -56,6 +56,29 @@
         </div>
     </div>
 
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-sm font-medium text-gray-500">Aujourd’hui</p>
+            <p class="text-xl font-semibold text-gray-900">{{ number_format($stats['today_invoices']) }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-sm font-medium text-gray-500">Cette semaine</p>
+            <p class="text-xl font-semibold text-gray-900">{{ number_format($stats['week_invoices']) }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-sm font-medium text-gray-500">Ce mois</p>
+            <p class="text-xl font-semibold text-gray-900">{{ number_format($stats['month_invoices']) }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-sm font-medium text-gray-500">Erreurs API 30j</p>
+            <p class="text-xl font-semibold text-gray-900">{{ number_format($stats['api_error_rate'], 2) }}%</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-sm font-medium text-gray-500">Attentes expirées</p>
+            <p class="text-xl font-semibold {{ $stats['expired_pending'] > 0 ? 'text-red-700' : 'text-gray-900' }}">{{ number_format($stats['expired_pending']) }}</p>
+        </div>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Factures récentes -->
         <div class="bg-white rounded-lg shadow">
@@ -154,3 +177,19 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+setInterval(async () => {
+    try {
+        const response = await fetch('{{ route('sgmef.dashboard.stats') }}', { headers: { 'Accept': 'application/json' } });
+        const stats = await response.json();
+        if (stats.expired_pending > 0) {
+            console.warn('Factures en attente expirées', stats.expired_pending);
+        }
+    } catch (error) {
+        console.warn('Polling dashboard e-MECeF indisponible', error);
+    }
+}, {{ max(5, (int) config('lara_sgmef_qr.web_interface.polling_seconds', 30)) }} * 1000);
+</script>
+@endpush

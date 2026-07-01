@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace Banelsems\LaraSgmefQr\Providers;
 
-use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
-use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
-use Banelsems\LaraSgmefQr\Services\SgmefApiClient;
-use Banelsems\LaraSgmefQr\Console\Commands\CheckConfigCommand;
 use Banelsems\LaraSgmefQr\Commands\EmecefGenerateDeclaration;
+use Banelsems\LaraSgmefQr\Console\Commands\CheckConfigCommand;
+use Banelsems\LaraSgmefQr\Console\Commands\GenerateStatExportCommand;
+use Banelsems\LaraSgmefQr\Contracts\IfuResolverInterface;
+use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
+use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\Services\DeclarationGeneratorService;
+use Banelsems\LaraSgmefQr\Services\DefaultIfuResolver;
 use Banelsems\LaraSgmefQr\Services\InvoiceManager;
-use Banelsems\LaraSgmefQr\Support\LaravelVersionHelper;
+use Banelsems\LaraSgmefQr\Services\QrCodeService;
+use Banelsems\LaraSgmefQr\Services\SgmefApiClient;
+use Banelsems\LaraSgmefQr\Services\StatExportService;
+use Banelsems\LaraSgmefQr\Services\TaxCalculatorService;
 use Illuminate\Http\Client\Factory as HttpClient;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
 
 /**
  * Service Provider pour le package LaraSgmefQR
@@ -26,11 +31,20 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        if (class_exists(\Barryvdh\DomPDF\ServiceProvider::class)) {
+            $this->app->register(\Barryvdh\DomPDF\ServiceProvider::class);
+        }
+
         // Merge configuration
         $this->mergeConfigFrom(
             __DIR__ . '/../../config/lara_sgmef_qr.php',
             'lara_sgmef_qr'
         );
+
+        $spatieDataConfig = __DIR__ . '/../../vendor/spatie/laravel-data/config/data.php';
+        if (file_exists($spatieDataConfig)) {
+            $this->mergeConfigFrom($spatieDataConfig, 'data');
+        }
 
         // Register API Client as singleton
         $this->app->singleton(DeclarationGeneratorService::class, function ($app) {
@@ -39,6 +53,11 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
                 $app->make(SgmefApiClientInterface::class)
             );
         });
+
+        $this->app->scoped(IfuResolverInterface::class, DefaultIfuResolver::class);
+        $this->app->singleton(TaxCalculatorService::class);
+        $this->app->singleton(QrCodeService::class);
+        $this->app->singleton(StatExportService::class);
 
         $this->app->singleton(SgmefApiClientInterface::class, function ($app) {
             return new SgmefApiClient(
@@ -59,7 +78,7 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
         // Alias for easier access
         $this->app->alias(SgmefApiClientInterface::class, 'sgmef.api');
         $this->app->alias(InvoiceManagerInterface::class, 'sgmef.invoices');
-        
+
         // Register helper methods
         $this->registerHelpers();
     }
@@ -73,6 +92,7 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
             $this->commands([
                 EmecefGenerateDeclaration::class,
                 CheckConfigCommand::class,
+                GenerateStatExportCommand::class,
             ]);
         }
 
@@ -141,6 +161,7 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
         return [
             SgmefApiClientInterface::class,
             InvoiceManagerInterface::class,
+            IfuResolverInterface::class,
             'sgmef.api',
             'sgmef.invoices',
             'sgmef.default_operator',

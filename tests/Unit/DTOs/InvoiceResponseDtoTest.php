@@ -3,10 +3,15 @@
 namespace Banelsems\LaraSgmefQr\Tests\Unit\DTOs;
 
 use Banelsems\LaraSgmefQr\DTOs\InvoiceResponseDto;
-use PHPUnit\Framework\TestCase;
+use Orchestra\Testbench\TestCase;
 
 class InvoiceResponseDtoTest extends TestCase
 {
+    protected function getPackageProviders($app)
+    {
+        return [\Banelsems\LaraSgmefQr\Providers\LaraSgmefQRServiceProvider::class];
+    }
+
     /**
      * @test
      * @covers \Banelsems\LaraSgmefQr\DTOs\InvoiceResponseDto::from

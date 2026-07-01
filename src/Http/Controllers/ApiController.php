@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Http\Controllers;
 
 use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -14,7 +16,8 @@ class ApiController extends BaseController
 {
     public function __construct(
         private readonly SgmefApiClientInterface $apiClient
-    ) {}
+    ) {
+    }
 
     /**
      * Récupère les groupes de taxes
@@ -31,13 +34,12 @@ class ApiController extends BaseController
 
             return response()->json([
                 'success' => true,
-                'data' => $taxGroups
+                'data' => $taxGroups,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des groupes de taxes : ' . $e->getMessage()
+                'message' => 'Erreur lors de la récupération des groupes de taxes : ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -57,13 +59,12 @@ class ApiController extends BaseController
 
             return response()->json([
                 'success' => true,
-                'data' => $paymentTypes
+                'data' => $paymentTypes,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des types de paiement : ' . $e->getMessage()
+                'message' => 'Erreur lors de la récupération des types de paiement : ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -83,13 +84,12 @@ class ApiController extends BaseController
 
             return response()->json([
                 'success' => true,
-                'data' => $invoiceTypes
+                'data' => $invoiceTypes,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des types de factures : ' . $e->getMessage()
+                'message' => 'Erreur lors de la récupération des types de factures : ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -100,7 +100,7 @@ class ApiController extends BaseController
     public function validateIfu(Request $request): JsonResponse
     {
         $request->validate([
-            'ifu' => ['required', 'string', 'regex:/^\d{13}$/']
+            'ifu' => ['required', 'string', 'regex:/^\d{13}$/'],
         ]);
 
         $ifu = $request->input('ifu');
@@ -109,7 +109,7 @@ class ApiController extends BaseController
         if (!preg_match('/^\d{13}$/', $ifu)) {
             return response()->json([
                 'success' => false,
-                'message' => 'L\'IFU doit contenir exactement 13 chiffres'
+                'message' => 'L\'IFU doit contenir exactement 13 chiffres',
             ], 422);
         }
 
@@ -121,8 +121,8 @@ class ApiController extends BaseController
             'message' => 'IFU valide',
             'data' => [
                 'ifu' => $ifu,
-                'formatted' => $this->formatIfu($ifu)
-            ]
+                'formatted' => $this->formatIfu($ifu),
+            ],
         ]);
     }
 
@@ -132,9 +132,9 @@ class ApiController extends BaseController
     private function formatIfu(string $ifu): string
     {
         // Format: XXXX XXX XXX XXX
-        return substr($ifu, 0, 4) . ' ' . 
-               substr($ifu, 4, 3) . ' ' . 
-               substr($ifu, 7, 3) . ' ' . 
+        return substr($ifu, 0, 4) . ' ' .
+               substr($ifu, 4, 3) . ' ' .
+               substr($ifu, 7, 3) . ' ' .
                substr($ifu, 10, 3);
     }
 }

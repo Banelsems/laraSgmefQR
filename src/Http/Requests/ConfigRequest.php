@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;

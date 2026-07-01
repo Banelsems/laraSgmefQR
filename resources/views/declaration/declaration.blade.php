@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Rapport d'Auto-Déclaration SFE</title>
     <style>
-        {!! file_get_contents(resource_path('css/declaration.css')) !!}
+        {!! $declarationCss ?? '' !!}
         @media print { .page-break { page-break-before: always; } }
     </style>
 </head>

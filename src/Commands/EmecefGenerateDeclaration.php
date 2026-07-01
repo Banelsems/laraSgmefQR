@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Commands;
 
 use Banelsems\LaraSgmefQr\Services\DeclarationGeneratorService;
@@ -18,18 +20,14 @@ class EmecefGenerateDeclaration extends Command
             $testCases = config('lara_sgmef_qr.emecef_test_cases');
             $this->info(count($testCases) . ' cas de test à traiter.');
 
-            // Note: La barre de progression est gérée à l'intérieur du service pour plus de précision
-            // mais pour cet exemple, nous l'appelons directement ici.
-            $pdfPath = $this->withProgressBar(range(1, count($testCases)), function () use ($generator) {
-                return $generator->generateDeclaration();
-            });
+            $pdfPath = $generator->generateDeclaration();
 
             $this->info("\nLe dossier de déclaration a été généré avec succès.");
             $this->line("Fichier PDF disponible à l'emplacement : <comment>{$pdfPath}</comment>");
-
         } catch (\Exception $e) {
             $this->error("\nUne erreur est survenue lors de la génération :");
             $this->error($e->getMessage());
+
             return Command::FAILURE;
         }
 

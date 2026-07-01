@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\Tests\Feature;
 
 use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Orchestra\Testbench\TestCase;
 use Illuminate\Support\Facades\Config;
 use Mockery;
+use Orchestra\Testbench\TestCase;
 
 /**
  * Tests fonctionnels pour ConfigController
@@ -20,9 +22,10 @@ class ConfigControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->apiClient = Mockery::mock(SgmefApiClientInterface::class);
         $this->app->instance(SgmefApiClientInterface::class, $this->apiClient);
+        @unlink(config_path('lara_sgmef_qr.php'));
     }
 
     protected function getPackageProviders($app)
@@ -42,6 +45,7 @@ class ConfigControllerTest extends TestCase
 
     protected function tearDown(): void
     {
+        @unlink(config_path('lara_sgmef_qr.php'));
         Mockery::close();
         parent::tearDown();
     }
@@ -111,24 +115,24 @@ class ConfigControllerTest extends TestCase
         $this->apiClient
             ->shouldReceive('setBaseUrl')
             ->with('https://test-api.example.com');
-            
+
         $this->apiClient
             ->shouldReceive('setCredentials')
             ->with('test-token');
-            
+
         $this->apiClient
             ->shouldReceive('getStatus')
             ->andReturn(['status' => 'OK', 'version' => '1.0']);
 
         $response = $this->getJson(route('sgmef.config.test', [
             'api_url' => 'https://test-api.example.com',
-            'token' => 'test-token'
+            'token' => 'test-token',
         ]));
 
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
-            'message' => 'Connexion réussie !'
+            'message' => 'Connexion réussie !',
         ]);
     }
 
@@ -140,24 +144,24 @@ class ConfigControllerTest extends TestCase
         $this->apiClient
             ->shouldReceive('setBaseUrl')
             ->with('https://test-api.example.com');
-            
+
         $this->apiClient
             ->shouldReceive('setCredentials')
             ->with('invalid-token');
-            
+
         $this->apiClient
             ->shouldReceive('getStatus')
             ->andThrow(new \Exception('Unauthorized'));
 
         $response = $this->getJson(route('sgmef.config.test', [
             'api_url' => 'https://test-api.example.com',
-            'token' => 'invalid-token'
+            'token' => 'invalid-token',
         ]));
 
         $response->assertStatus(400);
         $response->assertJson([
             'success' => false,
-            'message' => 'Erreur de connexion : Unauthorized'
+            'message' => 'Erreur de connexion : Unauthorized',
         ]);
     }
 
@@ -177,7 +181,7 @@ class ConfigControllerTest extends TestCase
     public function test_validates_api_url_format(): void
     {
         $response = $this->post(route('sgmef.config.store'), [
-            'api_url' => 'not-a-url'
+            'api_url' => 'not-a-url',
         ]);
 
         $response->assertSessionHasErrors(['api_url']);
@@ -190,7 +194,7 @@ class ConfigControllerTest extends TestCase
     {
         $response = $this->post(route('sgmef.config.store'), [
             'api_url' => 'https://valid-url.com',
-            'default_ifu' => 'invalid-ifu'
+            'default_ifu' => 'invalid-ifu',
         ]);
 
         $response->assertSessionHasErrors(['default_ifu']);
@@ -203,14 +207,14 @@ class ConfigControllerTest extends TestCase
     {
         $response = $this->post(route('sgmef.config.store'), [
             'api_url' => 'https://valid-url.com',
-            'http_timeout' => 1 // Trop petit
+            'http_timeout' => 1, // Trop petit
         ]);
 
         $response->assertSessionHasErrors(['http_timeout']);
 
         $response = $this->post(route('sgmef.config.store'), [
             'api_url' => 'https://valid-url.com',
-            'http_timeout' => 500 // Trop grand
+            'http_timeout' => 500, // Trop grand
         ]);
 
         $response->assertSessionHasErrors(['http_timeout']);
@@ -237,11 +241,11 @@ class ConfigControllerTest extends TestCase
     private function mockConfigFile(): void
     {
         $configPath = config_path('lara_sgmef_qr.php');
-        
+
         if (!file_exists(dirname($configPath))) {
-            mkdir(dirname($configPath), 0755, true);
+            mkdir(dirname($configPath), 0o755, true);
         }
-        
+
         $defaultConfig = [
             'api_url' => 'https://old-api.example.com',
             'token' => 'old-token',
@@ -257,7 +261,7 @@ class ConfigControllerTest extends TestCase
                 'enabled' => true,
             ],
         ];
-        
+
         file_put_contents($configPath, "<?php\n\nreturn " . var_export($defaultConfig, true) . ";\n");
     }
 }

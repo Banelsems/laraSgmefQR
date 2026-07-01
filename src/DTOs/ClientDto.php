@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Banelsems\LaraSgmefQr\DTOs;
 
 use Spatie\LaravelData\Attributes\Validation\Nullable;
@@ -12,13 +14,11 @@ class ClientDto extends Data
     public function __construct(
         #[Nullable]
         #[Regex('/^\d{13}$/')]
-        public readonly ?string $ifu,
-
+        public readonly ?string $ifu = null,
         #[Required]
-        public readonly ?string $name,
-
-        public readonly ?string $contact,
-        
-        public readonly ?string $address
-    ) {}
+        public readonly ?string $name = null,
+        public readonly ?string $contact = null,
+        public readonly ?string $address = null
+    ) {
+    }
 }
