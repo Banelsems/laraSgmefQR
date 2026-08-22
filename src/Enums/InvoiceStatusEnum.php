@@ -12,6 +12,7 @@ enum InvoiceStatusEnum: string
     case PENDING = 'pending';
     case CONFIRMED = 'confirmed';
     case CANCELLED = 'cancelled';
+    case EXPIRED = 'expired';
     case ERROR = 'error';
 
     /**
@@ -23,6 +24,7 @@ enum InvoiceStatusEnum: string
             self::PENDING => 'yellow',
             self::CONFIRMED => 'green',
             self::CANCELLED => 'gray',
+            self::EXPIRED => 'orange',
             self::ERROR => 'red',
         };
     }
@@ -36,6 +38,7 @@ enum InvoiceStatusEnum: string
             self::PENDING => 'En attente',
             self::CONFIRMED => 'Confirmée',
             self::CANCELLED => 'Annulée',
+            self::EXPIRED => 'Expirée',
             self::ERROR => 'Erreur',
         };
     }
@@ -54,5 +57,13 @@ enum InvoiceStatusEnum: string
     public function canBeCancelled(): bool
     {
         return in_array($this, [self::PENDING, self::CONFIRMED]);
+    }
+
+    /**
+     * Vérifie si le statut est un état terminal (plus de transition possible).
+     */
+    public function isTerminal(): bool
+    {
+        return in_array($this, [self::CONFIRMED, self::CANCELLED, self::EXPIRED, self::ERROR]);
     }
 }

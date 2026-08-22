@@ -4,33 +4,12 @@ declare(strict_types=1);
 
 namespace Banelsems\LaraSgmefQr\Commands;
 
-use Banelsems\LaraSgmefQr\Services\DeclarationGeneratorService;
-use Illuminate\Console\Command;
+use Banelsems\LaraSgmefQr\Console\Commands\EmecefGenerateDeclaration as CanonicalEmecefGenerateDeclaration;
 
-class EmecefGenerateDeclaration extends Command
+/**
+ * @deprecated since 4.0.0, use {@see \Banelsems\LaraSgmefQr\Console\Commands\EmecefGenerateDeclaration} instead.
+ *             Scheduled for removal in 5.0.0.
+ */
+class EmecefGenerateDeclaration extends CanonicalEmecefGenerateDeclaration
 {
-    protected $signature = 'emecef:generate-declaration';
-    protected $description = 'Génère le dossier d\'auto-déclaration e-MECeF complet (Annexe 1 & 2).';
-
-    public function handle(DeclarationGeneratorService $generator)
-    {
-        $this->info('Début de la génération du dossier d\'auto-déclaration...');
-
-        try {
-            $testCases = config('lara_sgmef_qr.emecef_test_cases');
-            $this->info(count($testCases) . ' cas de test à traiter.');
-
-            $pdfPath = $generator->generateDeclaration();
-
-            $this->info("\nLe dossier de déclaration a été généré avec succès.");
-            $this->line("Fichier PDF disponible à l'emplacement : <comment>{$pdfPath}</comment>");
-        } catch (\Exception $e) {
-            $this->error("\nUne erreur est survenue lors de la génération :");
-            $this->error($e->getMessage());
-
-            return Command::FAILURE;
-        }
-
-        return Command::SUCCESS;
-    }
 }

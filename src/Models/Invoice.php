@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Banelsems\LaraSgmefQr\Models;
 
 use Banelsems\LaraSgmefQr\Database\Factories\InvoiceFactory;
+use Banelsems\LaraSgmefQr\DTOs\SecurityElementsDto;
 use Banelsems\LaraSgmefQr\Enums\InvoiceStatusEnum;
+use Banelsems\LaraSgmefQr\Enums\InvoiceTypeEnum;
+use Banelsems\LaraSgmefQr\Exceptions\InvoiceException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -73,32 +77,44 @@ class Invoice extends Model
 
     /**
      * Scope pour filtrer par statut
+     *
+     * @param  Builder<Invoice>  $query
+     * @return Builder<Invoice>
      */
-    public function scopeByStatus($query, InvoiceStatusEnum $status)
+    public function scopeByStatus(Builder $query, InvoiceStatusEnum $status): Builder
     {
         return $query->where('status', $status);
     }
 
     /**
      * Scope pour les factures confirmées
+     *
+     * @param  Builder<Invoice>  $query
+     * @return Builder<Invoice>
      */
-    public function scopeConfirmed($query)
+    public function scopeConfirmed(Builder $query): Builder
     {
         return $query->byStatus(InvoiceStatusEnum::CONFIRMED);
     }
 
     /**
      * Scope pour les factures en attente
+     *
+     * @param  Builder<Invoice>  $query
+     * @return Builder<Invoice>
      */
-    public function scopePending($query)
+    public function scopePending(Builder $query): Builder
     {
         return $query->byStatus(InvoiceStatusEnum::PENDING);
     }
 
     /**
      * Scope pour les factures avec erreur
+     *
+     * @param  Builder<Invoice>  $query
+     * @return Builder<Invoice>
      */
-    public function scopeWithError($query)
+    public function scopeWithError(Builder $query): Builder
     {
         return $query->byStatus(InvoiceStatusEnum::ERROR);
     }
@@ -136,6 +152,24 @@ class Invoice extends Model
     }
 
     /**
+     * Retourne l'UID e-MECeF ou lève une exception métier s'il est absent.
+     *
+     * Une facture sans UID ne peut pas être confirmée, annulée ni synchronisée
+     * auprès de l'API e-MECeF. Cette précondition explicite évite de propager
+     * un null vers des méthodes attendant une chaîne.
+     */
+    public function requireUid(): string
+    {
+        if ($this->uid === null) {
+            throw new InvoiceException(
+                'La facture #' . $this->id . ' n\'a pas d\'UID e-MECeF (création API échouée ou non effectuée).'
+            );
+        }
+
+        return $this->uid;
+    }
+
+    /**
      * Retourne le badge de statut formaté
      */
     public function getStatusBadge(): array
@@ -159,7 +193,7 @@ class Invoice extends Model
             'has_mecf_code' => !empty($this->mecf_code),
             'error_code' => $this->error_code,
             'expires_at' => $this->expires_at?->toISOString(),
-            'created_at' => $this->created_at?->toISOString(),
+            'created_at' => $this->created_at->toISOString(),
             'confirmed_at' => $this->confirmed_at?->toISOString(),
             'cancelled_at' => $this->cancelled_at?->toISOString(),
         ];
@@ -168,5 +202,82 @@ class Invoice extends Model
     protected static function newFactory(): InvoiceFactory
     {
         return InvoiceFactory::new();
+    }
+
+    /**
+     * Retourne le type de facture typé.
+     */
+    public function invoiceType(): InvoiceTypeEnum
+    {
+        return InvoiceTypeEnum::from($this->type);
+    }
+
+    /**
+     * Vérifie si cette facture est un avoir (FA ou EA).
+     */
+    public function isCreditNote(): bool
+    {
+        return $this->invoiceType()->isCreditNote();
+    }
+
+    /**
+     * Retourne les éléments de sécurité structurés depuis le JSON stocké.
+     */
+    public function securityElements(): ?SecurityElementsDto
+    {
+        if (!is_array($this->security_elements) || count($this->security_elements) === 0) {
+            return null;
+        }
+
+        return SecurityElementsDto::from($this->security_elements);
+    }
+
+    /**
+     * Retourne le payload du QR code (données brutes à encoder).
+     */
+    public function qrCodePayload(): ?string
+    {
+        return $this->qr_code_data;
+    }
+
+    /**
+     * Vérifie si la facture possède un QR code.
+     */
+    public function hasQrCode(): bool
+    {
+        return filled($this->qr_code_data);
+    }
+
+    /**
+     * Retourne le code MECeF/DGI ou null.
+     */
+    public function mecfCode(): ?string
+    {
+        return $this->mecf_code;
+    }
+
+    /**
+     * Retourne le NIM (Numéro d'Identification du Matériel) depuis les
+     * éléments de sécurité, ou null si absent.
+     */
+    public function nim(): ?string
+    {
+        return $this->securityElements()?->nim;
+    }
+
+    /**
+     * Retourne la date de confirmation e-MECeF (dateTime des security elements).
+     */
+    public function mecfDateTime(): ?string
+    {
+        return $this->securityElements()?->dateTime;
+    }
+
+    /**
+     * Retourne les compteurs e-MECeF depuis les security elements.
+     */
+    public function counters(): ?string
+    {
+        return $this->securityElements()?->counters;
     }
 }

@@ -233,26 +233,95 @@ Vous pouvez ensuite injecter le resolver pour construire vos DTOs :
 $ifu = app(IfuResolverInterface::class)->resolve('boutique-cotonou');
 ```
 
-### Jobs Laravel
+### Jobs Laravel et API async
+
+Le package fournit une API async additive via `InvoiceQueueDispatcher` qui
+dispatche des jobs sur la queue configuree. Les jobs appellent les memes
+services metier (`InvoiceManager`) que l'API synchrone — aucune logique
+metier n'est dupliquee.
+
+#### Configuration
+
+```env
+SGMEF_QUEUE_ENABLED=true
+SGMEF_QUEUE_CONNECTION=redis
+SGMEF_QUEUE=sgmef
+SGMEF_JOB_TIMEOUT=60
+SGMEF_SYNC_TRIES=3
+SGMEF_CLEANUP_ENABLED=true
+SGMEF_CLEANUP_FREQUENCY=everyMinute
+SGMEF_CLEANUP_LIMIT=500
+```
+
+#### Dispatcher async (recommande)
+
+```php
+use Banelsems\LaraSgmefQr\Services\InvoiceQueueDispatcher;
+
+$dispatcher = app(InvoiceQueueDispatcher::class);
+
+// Creation (payload array serialisable, IFU fige au dispatch)
+$dispatcher->create($dto);
+
+// Confirmation / annulation / synchronisation
+$dispatcher->confirmByUid($invoice->uid);
+$dispatcher->cancelByUid($invoice->uid);
+$dispatcher->syncByUid($invoice->uid);
+```
+
+Tous les dispatchs utilisent `afterCommit()` pour ne s'envoyer qu'apres
+commit de la transaction DB courante.
+
+#### Jobs directs (bas niveau)
 
 ```php
 use Banelsems\LaraSgmefQr\Jobs\CreateInvoiceJob;
 use Banelsems\LaraSgmefQr\Jobs\ConfirmInvoiceJob;
+use Banelsems\LaraSgmefQr\Jobs\SyncInvoiceJob;
+use Banelsems\LaraSgmefQr\Jobs\CancelInvoiceJob;
 use Banelsems\LaraSgmefQr\Jobs\CleanupExpiredPendingInvoicesJob;
 
-CreateInvoiceJob::dispatch($data)->onQueue('sgmef');
-ConfirmInvoiceJob::dispatch($invoice->uid)->onQueue('sgmef');
-CleanupExpiredPendingInvoicesJob::dispatch()->onQueue('sgmef');
+// Payload = DTO->toArray() (array serialisable)
+CreateInvoiceJob::dispatch($dto->toArray());
+ConfirmInvoiceJob::dispatch($invoice->uid);
+SyncInvoiceJob::dispatch($invoice->uid);
+CancelInvoiceJob::dispatch($invoice->uid);
 ```
 
-Planification recommandee du nettoyage :
+#### Securite des retries
 
-```php
-// app/Console/Kernel.php
-use Banelsems\LaraSgmefQr\Jobs\CleanupExpiredPendingInvoicesJob;
+| Job | tries | Raison |
+|-----|-------|--------|
+| CreateInvoiceJob | 1 | POST /invoice non-idempotent |
+| ConfirmInvoiceJob | 1 | PUT /confirm non-idempotent |
+| CancelInvoiceJob | 1 | PUT /cancel non-idempotent |
+| SyncInvoiceJob | 3 | GET /invoice safe-to-retry |
+| CleanupExpiredPendingInvoicesJob | 1 | Idempotent mais non-retryable |
 
-$schedule->job(new CleanupExpiredPendingInvoicesJob())->everyMinute();
+Les jobs Create/Confirm/Cancel sont `ShouldBeUnique` pour eviter deux
+operations concurrentes sur la meme facture.
+
+#### Expiration des factures pending
+
+La commande `sgmef:cleanup-expired` marque les factures pending dont
+`expires_at` est depasse au statut `EXPIRED` (distinct d'`ERROR`).
+
+```bash
+php artisan sgmef:cleanup-expired
+php artisan sgmef:cleanup-expired --dry-run
+php artisan sgmef:cleanup-expired --limit=1000
 ```
+
+Le scheduling est automatiquement enregistre par le ServiceProvider si
+`SGMEF_CLEANUP_ENABLED=true` (defaut). L'event `InvoiceExpired` est
+dispatche pour chaque facture expiree.
+
+#### QR code PNG
+
+`QrCodeService::png()` produit desormais de vrais PNG (signature `\x89PNG`).
+Necessite `ext-gd`. Sans `ext-gd`, une `RuntimeException` explicite est levee
+(png() ne retourne jamais silencieusement du SVG). Utilisez `svg()` pour un
+format vectoriel sans dependance.
 
 ## Commandes
 

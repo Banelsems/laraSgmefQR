@@ -5,37 +5,48 @@ declare(strict_types=1);
 namespace Banelsems\LaraSgmefQr\Services;
 
 use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
+use Banelsems\LaraSgmefQr\Contracts\InvoiceRepositoryInterface;
 use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
 use Banelsems\LaraSgmefQr\Enums\InvoiceStatusEnum;
+use Banelsems\LaraSgmefQr\Events\InvoiceCancelled;
+use Banelsems\LaraSgmefQr\Events\InvoiceConfirmationFailed;
+use Banelsems\LaraSgmefQr\Events\InvoiceConfirmed;
+use Banelsems\LaraSgmefQr\Events\InvoiceCreationFailed;
+use Banelsems\LaraSgmefQr\Events\InvoiceCreated;
+use Banelsems\LaraSgmefQr\Events\InvoiceSynchronized;
 use Banelsems\LaraSgmefQr\Exceptions\InvoiceException;
 use Banelsems\LaraSgmefQr\Exceptions\SgmefApiException;
 use Banelsems\LaraSgmefQr\Models\Invoice;
+use Banelsems\LaraSgmefQr\Support\Money;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use Spatie\LaravelData\Exceptions\ValidationException;
 
 /**
- * Gestionnaire de factures - Logique métier centralisée
+ * Gestionnaire de factures — orchestrateur du cycle de vie.
+ *
+ * Délègue la persistance au InvoiceRepositoryInterface et dispatche
+ * des événements métier permettant à l'application hôte de réagir.
  */
 class InvoiceManager implements InvoiceManagerInterface
 {
     public function __construct(
-        private readonly SgmefApiClientInterface $apiClient
+        private readonly SgmefApiClientInterface $apiClient,
+        private readonly InvoiceRepositoryInterface $repository
     ) {
     }
 
     /**
-     * Crée une nouvelle facture
+     * Crée une nouvelle facture.
      */
     public function createInvoice(InvoiceRequestDto $invoiceData): Invoice
     {
         return DB::transaction(function () use ($invoiceData) {
             try {
-                $this->validateInvoiceData($invoiceData);
                 $apiResponse = $this->apiClient->createInvoice($invoiceData);
 
-                $invoice = Invoice::create([
+                $invoice = $this->repository->create([
                     'uid' => $apiResponse->uid,
                     'ifu' => $invoiceData->ifu,
                     'customer_ifu' => $invoiceData->client->ifu,
@@ -54,9 +65,13 @@ class InvoiceManager implements InvoiceManagerInterface
                     'total_amount' => $invoice->total_amount,
                 ]);
 
+                Event::dispatch(new InvoiceCreated($invoice));
+
                 return $invoice;
-            } catch (ValidationException $e) {
-                throw new InvoiceException('Données de facture invalides: ' . implode(', ', array_keys($e->errors())));
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                throw new InvoiceException(
+                    'Données de facture invalides: ' . implode(', ', array_keys($e->validator->failed()))
+                );
             } catch (SgmefApiException $e) {
                 Log::error('Erreur API lors de la création de facture', [
                     'error' => $e->getMessage(),
@@ -70,8 +85,7 @@ class InvoiceManager implements InvoiceManagerInterface
                     ],
                 ]);
 
-                // Créer quand même l'enregistrement avec le statut erreur
-                $invoice = Invoice::create([
+                $invoice = $this->repository->create([
                     'uid' => null,
                     'ifu' => $invoiceData->ifu,
                     'customer_ifu' => $invoiceData->client->ifu,
@@ -85,6 +99,8 @@ class InvoiceManager implements InvoiceManagerInterface
                     'raw_response' => ['error' => $e->getMessage()],
                 ]);
 
+                Event::dispatch(new InvoiceCreationFailed($invoiceData, $e));
+
                 throw new InvoiceException(
                     'Erreur lors de la création de la facture: ' . $e->getMessage(),
                     0,
@@ -95,11 +111,11 @@ class InvoiceManager implements InvoiceManagerInterface
     }
 
     /**
-     * Confirme une facture et récupère les éléments de sécurité
+     * Confirme une facture et récupère les éléments de sécurité.
      */
     public function confirmInvoice(string $uid): Invoice
     {
-        $invoice = $this->getInvoiceByUid($uid);
+        $invoice = $this->repository->findByUid($uid);
 
         if ($invoice->status !== InvoiceStatusEnum::PENDING) {
             throw new InvoiceException(
@@ -109,11 +125,10 @@ class InvoiceManager implements InvoiceManagerInterface
 
         return DB::transaction(function () use ($invoice) {
             try {
-                // Appel à l'API pour confirmer la facture
-                $securityElements = $this->apiClient->confirmInvoice($invoice->uid);
+                $securityElements = $this->apiClient->confirmInvoice($invoice->requireUid());
 
                 if ($securityElements->hasError()) {
-                    $invoice->update([
+                    $this->repository->update($invoice, [
                         'status' => InvoiceStatusEnum::ERROR,
                         'error_code' => $securityElements->errorCode,
                         'error_description' => $securityElements->errorDesc,
@@ -125,8 +140,7 @@ class InvoiceManager implements InvoiceManagerInterface
                     );
                 }
 
-                // Mise à jour avec les éléments de sécurité
-                $invoice->update([
+                $this->repository->update($invoice, [
                     'status' => InvoiceStatusEnum::CONFIRMED,
                     'qr_code_data' => $securityElements->qrCode,
                     'mecf_code' => $securityElements->codeMECeFDGI,
@@ -146,6 +160,8 @@ class InvoiceManager implements InvoiceManagerInterface
                     'mecf_code' => $invoice->mecf_code,
                 ]);
 
+                Event::dispatch(new InvoiceConfirmed($invoice));
+
                 return $invoice;
             } catch (SgmefApiException $e) {
                 Log::error('Erreur API lors de la confirmation de facture', [
@@ -153,7 +169,7 @@ class InvoiceManager implements InvoiceManagerInterface
                     'error' => $e->getMessage(),
                 ]);
 
-                $invoice->update([
+                $this->repository->update($invoice, [
                     'status' => InvoiceStatusEnum::ERROR,
                     'error_code' => (string) $e->getCode(),
                     'error_description' => $e->getMessage(),
@@ -162,6 +178,11 @@ class InvoiceManager implements InvoiceManagerInterface
                         ['confirmation_error' => $e->getMessage()]
                     ),
                 ]);
+
+                Event::dispatch(new InvoiceConfirmationFailed(
+                    $invoice,
+                    new InvoiceException('Erreur lors de la confirmation: ' . $e->getMessage(), 0, $e)
+                ));
 
                 throw new InvoiceException(
                     'Erreur lors de la confirmation de la facture: ' . $e->getMessage(),
@@ -173,11 +194,11 @@ class InvoiceManager implements InvoiceManagerInterface
     }
 
     /**
-     * Annule une facture
+     * Annule une facture.
      */
     public function cancelInvoice(string $uid): Invoice
     {
-        $invoice = $this->getInvoiceByUid($uid);
+        $invoice = $this->repository->findByUid($uid);
 
         if (!in_array($invoice->status, [InvoiceStatusEnum::PENDING, InvoiceStatusEnum::CONFIRMED])) {
             throw new InvoiceException(
@@ -187,11 +208,9 @@ class InvoiceManager implements InvoiceManagerInterface
 
         return DB::transaction(function () use ($invoice) {
             try {
-                // Appel à l'API pour annuler la facture
-                $cancelResponse = $this->apiClient->cancelInvoice($invoice->uid);
+                $cancelResponse = $this->apiClient->cancelInvoice($invoice->requireUid());
 
-                // Mise à jour du statut
-                $invoice->update([
+                $this->repository->update($invoice, [
                     'status' => InvoiceStatusEnum::CANCELLED,
                     'cancelled_at' => now(),
                     'raw_response' => array_merge(
@@ -204,6 +223,8 @@ class InvoiceManager implements InvoiceManagerInterface
                     'invoice_id' => $invoice->id,
                     'uid' => $invoice->uid,
                 ]);
+
+                Event::dispatch(new InvoiceCancelled($invoice));
 
                 return $invoice;
             } catch (SgmefApiException $e) {
@@ -222,28 +243,25 @@ class InvoiceManager implements InvoiceManagerInterface
     }
 
     /**
-     * Récupère une facture par son UID
+     * Récupère une facture par son UID.
      */
     public function getInvoice(string $uid): Invoice
     {
-        return $this->getInvoiceByUid($uid);
+        return $this->repository->findByUid($uid);
     }
 
     /**
-     * Synchronise une facture avec l'API
+     * Synchronise une facture avec l'API.
      */
     public function syncInvoice(string $uid): Invoice
     {
-        $invoice = $this->getInvoiceByUid($uid);
-
-        if (!$invoice->uid) {
-            throw new InvoiceException('Impossible de synchroniser une facture sans UID API');
-        }
+        $invoice = $this->repository->findByUid($uid);
+        $apiUid = $invoice->requireUid();
 
         try {
-            $apiResponse = $this->apiClient->getInvoice($invoice->uid);
+            $apiResponse = $this->apiClient->getInvoice($apiUid);
 
-            $invoice->update([
+            $this->repository->update($invoice, [
                 'raw_response' => array_merge(
                     $invoice->raw_response ?? [],
                     ['sync' => $apiResponse->toArray()]
@@ -254,6 +272,8 @@ class InvoiceManager implements InvoiceManagerInterface
                 'invoice_id' => $invoice->id,
                 'uid' => $invoice->uid,
             ]);
+
+            Event::dispatch(new InvoiceSynchronized($invoice));
 
             return $invoice;
         } catch (SgmefApiException $e) {
@@ -270,43 +290,15 @@ class InvoiceManager implements InvoiceManagerInterface
         }
     }
 
-    /**
-     * Récupère une facture par UID avec gestion d'erreur
-     */
-    private function getInvoiceByUid(string $uid): Invoice
+    private function calculateRequestTotal(InvoiceRequestDto $invoiceData): int
     {
-        $invoice = Invoice::where('uid', $uid)->first();
+        $total = Money::from(0);
 
-        if (!$invoice) {
-            throw new InvoiceException("Facture introuvable avec l'UID: {$uid}");
+        foreach ($invoiceData->items as $item) {
+            $lineTotal = Money::from($item->price)->multiply((float) $item->quantity);
+            $total = $total->add($lineTotal);
         }
 
-        return $invoice;
-    }
-
-    private function calculateRequestTotal(InvoiceRequestDto $invoiceData): float
-    {
-        return collect($invoiceData->items)->sum(function ($item): float {
-            return (float) $item->price * (float) $item->quantity;
-        });
-    }
-
-    private function validateInvoiceData(InvoiceRequestDto $invoiceData): void
-    {
-        if (!preg_match('/^\d{13}$/', $invoiceData->ifu)) {
-            throw new InvoiceException('Données de facture invalides: ifu');
-        }
-
-        if (blank($invoiceData->client->name)) {
-            throw new InvoiceException('Données de facture invalides: client.name');
-        }
-
-        if (in_array($invoiceData->type, ['FA', 'EA'], true) && blank($invoiceData->reference)) {
-            throw new InvoiceException('Données de facture invalides: reference');
-        }
-
-        if (abs($this->calculateRequestTotal($invoiceData) - collect($invoiceData->payment)->sum('amount')) > 0.01) {
-            throw new InvoiceException('Données de facture invalides: payment');
-        }
+        return $total->getAmount();
     }
 }

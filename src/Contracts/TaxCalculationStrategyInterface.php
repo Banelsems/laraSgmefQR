@@ -11,7 +11,7 @@ interface TaxCalculationStrategyInterface
     public function group(): string;
 
     /**
-     * @return array{base: float, tax: float, aib: float, total: float}
+     * @return array{base: int, tax: int, aib: int, total: int}
      */
     public function calculate(InvoiceItemDto $item): array;
 }

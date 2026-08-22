@@ -16,7 +16,7 @@ class ClientDto extends Data
         #[Regex('/^\d{13}$/')]
         public readonly ?string $ifu = null,
         #[Required]
-        public readonly ?string $name = null,
+        public readonly string $name,
         public readonly ?string $contact = null,
         public readonly ?string $address = null
     ) {

@@ -5,6 +5,89 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - Lot 7 : Queue, Jobs, expiration et résilience asynchrone
+
+### Added
+
+- **InvoiceQueueDispatcher** : Async API for invoice creation/confirm/cancel/sync via jobs, with `afterCommit()` and IFU captured in payload at dispatch time.
+- **SyncInvoiceJob** : GET-based sync job, safe to retry (tries=3, backoff [5,15,60]).
+- **CancelInvoiceJob** : PUT cancel job, `ShouldBeUnique`, tries=1.
+- **ExpirePendingInvoices** : Service that marks pending invoices past `expires_at` as `EXPIRED`, dispatches `InvoiceExpired` event.
+- **CleanupExpiredInvoicesCommand** : `sgmef:cleanup-expired` Artisan command with `--dry-run` and `--limit` options.
+- **Scheduling** : Automatic scheduling of cleanup via ServiceProvider (configurable frequency, `onOneServer`, `withoutOverlapping`).
+- **SleeperInterface** + **NativeSleeper** : Abstraction for `usleep()` to enable testing retry policies without real delays.
+- **InvoiceStatusEnum::EXPIRED** : New terminal status for pending invoices past their e-MECeF TTL (distinct from `ERROR`).
+- **InvoiceStatusEnum::isTerminal()** : Helper to check if a status is terminal.
+- **Migration** : `2024_10_09_010001_add_expired_status_to_invoices_table` (additive, expand-and-contract).
+- **QrCodeService::png()** : Now produces real PNG (via `GDLibRenderer`) when `ext-gd` is available.
+- **Config** : Extended `queue` section with `queue`, `tries`, `timeout`, `backoff`, `cleanup` keys.
+
+### Changed
+
+- **CreateInvoiceJob** : Payload is now a serializable `array` (not DTO); `tries=1` (POST non-idempotent); `failed()` method for logging; IFU captured at dispatch time.
+- **ConfirmInvoiceJob** : `ShouldBeUnique` with `uniqueId = confirm:{uid}`; `tries=1`; `failed()` method.
+- **CleanupExpiredPendingInvoicesJob** : Delegates to `ExpirePendingInvoices` service; `ShouldBeUnique`; configurable limit.
+- **SgmefApiClient** : Uses `SleeperInterface` instead of direct `usleep()` for testable retry delays.
+
+### Fixed
+
+- **QrCodeService::png()** : No longer silently returns SVG. Produces real PNG or throws `RuntimeException` if `ext-gd` is missing.
+
+### Security
+
+- POST /invoice, PUT /confirm, PUT /cancel are never retried automatically (tries=1) to prevent duplicate invoices.
+- All jobs are `ShouldBeUnique` to prevent concurrent operations on the same invoice.
+- `afterCommit()` prevents job dispatch before DB transaction commit.
+
+## [4.0.0] - 2026-08-21
+
+### Added
+
+- **Money value object** : `Money` class for integer minor units (XOF) calculations.
+- **Enums** : `PaymentTypeEnum` and `InvoiceTypeEnum` for type-safe invoice/payment types.
+- **Centralized validation** : `InvoiceRequestDto::fromArray()` is now the single source of truth for invoice validation.
+- **Repository pattern** : `InvoiceRepositoryInterface` + `EloquentInvoiceRepository` for invoice persistence.
+- **Domain events** : `InvoiceCreated`, `InvoiceConfirmed`, `InvoiceCancelled`, `InvoiceSynchronized`, etc.
+- **InvoiceFilters** : Whitelisted HTTP filters for invoice listing (search, amount_min/max, date range, status, type).
+- **SgmefConnectionConfig** : Immutable connection configuration object (PHP 8.1 compatible).
+- **SgmefApiClientFactory** : Creates isolated API client instances without mutating shared singletons.
+- **Exception hierarchy** : `SgmefAuthenticationException`, `SgmefValidationException`, `SgmefNotFoundException`, `SgmefRateLimitException`, `SgmefTimeoutException`, `SgmefNetworkException`, `SgmefServerException` — all catchable via `SgmefApiException`.
+- **SgmefRetryPolicy** : Safe retry for GET operations only; POST /invoice is never retried automatically.
+- **ReferenceDataProvider** : Cached reference data with explicit fallback and provenance tracking.
+- **SgmefLogSanitizer** : Recursive log sanitization for tokens, passwords, and secrets.
+- **PackageConfigurationService** : Isolated config management service.
+- **SgmefConnectionTester** : Connection testing via isolated client instances (no singleton mutation).
+- **FileConfigWriter** : Atomic, targeted config file writing (deprecated, prefer .env).
+
+### Changed
+
+- `TaxCalculationStrategyInterface::calculate()` returns `int` instead of `float`.
+- `InvoiceManager` constructor requires `InvoiceRepositoryInterface` as second parameter.
+- `SgmefApiClient` now classifies HTTP errors into specific exception subclasses.
+- `SgmefApiClient::getTaxGroups()` no longer returns hardcoded labels — returns API data as-is.
+- `ConfigController::testConnection()` no longer mutates the shared `SgmefApiClient` singleton.
+- `ConfigController::store()` uses `PackageConfigurationService` instead of direct `file_put_contents()`.
+- `InvoiceController::create()` uses `ReferenceDataProviderInterface` instead of hardcoded fallbacks.
+- `InvoiceController::index()` uses `InvoiceFilters` + repository for whitelisted filtering.
+- ServiceProvider bindings audited: factory, repository, services properly scoped as singleton/scoped.
+
+### Deprecated
+
+- `SgmefApiClientInterface::setBaseUrl()` — Use `SgmefApiClientFactory::make()` with immutable config.
+- `SgmefApiClientInterface::setCredentials()` — Same as above.
+- `ConfigWriterInterface` — Runtime config file writing discouraged, prefer `.env`.
+- `SgmefApiClientInterface::confirmInvoice()` `$withQrCode` parameter — No effect, removal in v5.0.0.
+
+### Fixed
+
+- `SgmefApiClient` no longer re-wraps `SgmefApiException` subclasses in generic `SgmefApiException`.
+- `SgmefApiClient` distinguishes network/timeout errors from API errors.
+- `ConfigController::testConnection()` no longer leaks state in long-lived workers (Octane, queue).
+- Reference data fallbacks are now explicit and logged, not silently swallowed.
+- Log entries are sanitized to prevent token/secret leakage.
+- Invoice filters restored: `search`, `amount_min`, `amount_max`, `date_from`, `date_to`.
+- Config file writing is now atomic (temp file + rename) and targeted (preserves `env()` for unchanged keys).
+
 ## [2.1.1] - 2025-10-19
 
 ### 🐛 Corrigé

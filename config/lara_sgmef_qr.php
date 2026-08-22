@@ -9,6 +9,8 @@ return [
     ),
     'token' => env('SGMEF_TOKEN'),
     'default_ifu' => env('SGMEF_DEFAULT_IFU'),
+    'ifus' => array_filter(array_map('trim', array_filter(explode(',', (string) env('SGMEF_IFUS', ''))))),
+    'ifu_map' => [],
     'verification_url' => env('SGMEF_VERIFICATION_URL', 'https://developper.impots.bj/sygmef-test/verification'),
     'pending_invoice_ttl_seconds' => (int) env('SGMEF_PENDING_INVOICE_TTL', 120),
     'default_operator' => [
@@ -35,6 +37,22 @@ return [
     'queue' => [
         'enabled' => env('SGMEF_QUEUE_ENABLED', false),
         'connection' => env('SGMEF_QUEUE_CONNECTION', env('QUEUE_CONNECTION', 'sync')),
+        'queue' => env('SGMEF_QUEUE', 'sgmef'),
+        'tries' => [
+            'create' => 1,
+            'confirm' => 1,
+            'cancel' => 1,
+            'sync' => (int) env('SGMEF_SYNC_TRIES', 3),
+        ],
+        'timeout' => (int) env('SGMEF_JOB_TIMEOUT', 60),
+        'backoff' => [
+            'sync' => [5, 15, 60],
+        ],
+        'cleanup' => [
+            'enabled' => env('SGMEF_CLEANUP_ENABLED', true),
+            'frequency' => env('SGMEF_CLEANUP_FREQUENCY', 'everyMinute'),
+            'limit' => (int) env('SGMEF_CLEANUP_LIMIT', 500),
+        ],
     ],
     'templates' => [
         'default' => 'default_a4',

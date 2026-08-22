@@ -26,7 +26,7 @@ class TaxCalculatorService
     }
 
     /**
-     * @return array{base: float, tax: float, aib: float, total: float}
+     * @return array{base: int, tax: int, aib: int, total: int}
      */
     public function calculateItem(InvoiceItemDto $item): array
     {
@@ -42,17 +42,17 @@ class TaxCalculatorService
     /**
      * @param iterable<InvoiceItemDto> $items
      *
-     * @return array{base: float, tax: float, aib: float, total: float, by_group: array<string, array{base: float, tax: float, aib: float, total: float}>}
+     * @return array{base: int, tax: int, aib: int, total: int, by_group: array<string, array{base: int, tax: int, aib: int, total: int}>}
      */
     public function calculateInvoice(iterable $items): array
     {
-        $summary = ['base' => 0.0, 'tax' => 0.0, 'aib' => 0.0, 'total' => 0.0, 'by_group' => []];
+        $summary = ['base' => 0, 'tax' => 0, 'aib' => 0, 'total' => 0, 'by_group' => []];
 
         foreach ($items as $item) {
             $line = $this->calculateItem($item);
             $group = $item->taxGroup;
 
-            $summary['by_group'][$group] ??= ['base' => 0.0, 'tax' => 0.0, 'aib' => 0.0, 'total' => 0.0];
+            $summary['by_group'][$group] ??= ['base' => 0, 'tax' => 0, 'aib' => 0, 'total' => 0];
 
             foreach (['base', 'tax', 'aib', 'total'] as $key) {
                 $summary[$key] += $line[$key];

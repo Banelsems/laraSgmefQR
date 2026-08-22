@@ -6,6 +6,7 @@ namespace Banelsems\LaraSgmefQr\Services\Taxes;
 
 use Banelsems\LaraSgmefQr\Contracts\TaxCalculationStrategyInterface;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceItemDto;
+use Banelsems\LaraSgmefQr\Support\Money;
 
 class FixedRateTaxStrategy implements TaxCalculationStrategyInterface
 {
@@ -21,18 +22,21 @@ class FixedRateTaxStrategy implements TaxCalculationStrategyInterface
         return $this->group;
     }
 
+    /**
+     * @return array{base: int, tax: int, aib: int, total: int}
+     */
     public function calculate(InvoiceItemDto $item): array
     {
-        $base = $item->price * $item->quantity;
-        $tax = round($base * $this->vatRate, 2);
-        $aib = round($base * $this->aibRate, 2);
-        $specific = (float) ($item->taxSpecific ?? 0);
+        $base = Money::from($item->price)->multiply((float) $item->quantity);
+        $tax = (int) round($base->getAmount() * $this->vatRate);
+        $aib = (int) round($base->getAmount() * $this->aibRate);
+        $specific = Money::from($item->taxSpecific ?? 0)->getAmount();
 
         return [
-            'base' => $base,
+            'base' => $base->getAmount(),
             'tax' => $tax + $specific,
             'aib' => $aib,
-            'total' => $base + $tax + $aib + $specific,
+            'total' => $base->getAmount() + $tax + $aib + $specific,
         ];
     }
 }

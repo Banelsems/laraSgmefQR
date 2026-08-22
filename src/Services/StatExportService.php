@@ -7,6 +7,7 @@ namespace Banelsems\LaraSgmefQr\Services;
 use Banelsems\LaraSgmefQr\Enums\InvoiceStatusEnum;
 use Banelsems\LaraSgmefQr\Models\Invoice;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 
@@ -20,7 +21,7 @@ class StatExportService
             'period' => [$from->toDateString(), $to->toDateString()],
             'invoice_count' => $invoices->count(),
             'total_amount' => (float) $invoices->sum('total_amount'),
-            'by_type' => $invoices->groupBy('type')->map->count()->all(),
+            'by_type' => $invoices->groupBy('type')->map(fn ($group): int => $group->count())->all(),
             'by_tax_group' => $this->taxGroups($invoices),
         ];
     }
@@ -31,33 +32,45 @@ class StatExportService
         File::ensureDirectoryExists(dirname($path));
 
         $handle = fopen($path, 'wb');
-        fputcsv($handle, ['uid', 'ifu', 'customer_ifu', 'type', 'status', 'total_amount', 'mecf_code', 'confirmed_at']);
+        if ($handle === false) {
+            throw new \RuntimeException("Impossible d'ouvrir le fichier d'export CSV : {$path}");
+        }
 
-        $this->query($from, $to)->orderBy('confirmed_at')->chunk(200, function ($invoices) use ($handle): void {
-            foreach ($invoices as $invoice) {
-                fputcsv($handle, [
-                    $invoice->uid,
-                    $invoice->ifu,
-                    $invoice->customer_ifu,
-                    $invoice->type,
-                    $invoice->status->value,
-                    $invoice->total_amount,
-                    $invoice->mecf_code,
-                    $invoice->confirmed_at?->toDateTimeString(),
-                ]);
-            }
-        });
+        try {
+            fputcsv($handle, ['uid', 'ifu', 'customer_ifu', 'type', 'status', 'total_amount', 'mecf_code', 'confirmed_at']);
 
-        fclose($handle);
+            $this->query($from, $to)->orderBy('confirmed_at')->chunk(200, function ($invoices) use ($handle): void {
+                foreach ($invoices as $invoice) {
+                    fputcsv($handle, [
+                        $invoice->uid,
+                        $invoice->ifu,
+                        $invoice->customer_ifu,
+                        $invoice->type,
+                        $invoice->status->value,
+                        $invoice->total_amount,
+                        $invoice->mecf_code,
+                        $invoice->confirmed_at?->toDateTimeString(),
+                    ]);
+                }
+            });
+        } finally {
+            fclose($handle);
+        }
 
         return $path;
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder<Invoice>
+     */
     private function query(CarbonInterface $from, CarbonInterface $to)
     {
-        return Invoice::query()
+        /** @var \Illuminate\Database\Eloquent\Builder<Invoice> $builder */
+        $builder = Invoice::query()
             ->where('status', InvoiceStatusEnum::CONFIRMED)
             ->whereBetween('confirmed_at', [$from->startOfDay(), $to->endOfDay()]);
+
+        return $builder;
     }
 
     private function taxGroups(Collection $invoices): array

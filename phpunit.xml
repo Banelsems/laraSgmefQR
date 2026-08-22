@@ -7,24 +7,32 @@
          stopOnFailure="false"
          cacheDirectory=".phpunit.cache"
          backupGlobals="false">
-    
+
     <testsuites>
-        <testsuite name="LaraSgmefQR Test Suite">
-            <directory suffix="Test.php">./src/Tests</directory>
-            <directory suffix="Test.php">./tests</directory>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">./tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory suffix="Test.php">./tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory suffix="Test.php">./tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Compliance">
+            <directory suffix="Test.php">./tests/Compliance</directory>
         </testsuite>
     </testsuites>
-    
+
     <source>
         <include>
             <directory suffix=".php">./src</directory>
         </include>
         <exclude>
-            <directory>./src/Tests</directory>
+            <directory>./tests</directory>
             <directory>./src/database/migrations</directory>
         </exclude>
     </source>
-    
+
     <coverage>
         <report>
             <html outputDirectory="coverage-html"/>
@@ -32,7 +40,7 @@
             <clover outputFile="coverage.xml"/>
         </report>
     </coverage>
-    
+
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="CACHE_DRIVER" value="array"/>

@@ -16,10 +16,14 @@ class GenerateStatExportCommand extends Command
 
     public function handle(StatExportService $exports): int
     {
-        $from = CarbonImmutable::parse($this->option('from') ?: now()->startOfMonth());
-        $to = CarbonImmutable::parse($this->option('to') ?: now()->endOfMonth());
+        $fromOption = $this->option('from');
+        $toOption = $this->option('to');
 
-        $path = $exports->exportCsv($from, $to, $this->option('path'));
+        $from = CarbonImmutable::parse(is_string($fromOption) ? $fromOption : now()->startOfMonth());
+        $to = CarbonImmutable::parse(is_string($toOption) ? $toOption : now()->endOfMonth());
+
+        $pathOption = $this->option('path');
+        $path = $exports->exportCsv($from, $to, is_string($pathOption) ? $pathOption : null);
         $summary = $exports->summary($from, $to);
 
         $this->info('Export STAT généré: ' . $path);

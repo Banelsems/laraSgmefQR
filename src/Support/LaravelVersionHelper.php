@@ -7,12 +7,18 @@ namespace Banelsems\LaraSgmefQr\Support;
 use Illuminate\Foundation\Application;
 
 /**
- * Helper pour gérer la compatibilité entre les versions Laravel
+ * Helper pour gérer la compatibilité entre les versions Laravel.
+ *
+ * La plupart des méthodes de cette classe sont des utilitaires de détection
+ * de version. Depuis v4.0, le package fonctionne de manière identique sur
+ * Laravel 10 à 13 sans conditionnelle version-spécifique. Les méthodes
+ * sont conservées pour rétrocompatibilité mais la plupart n'ont plus de
+ * différence fonctionnelle entre versions.
  */
 class LaravelVersionHelper
 {
     /**
-     * Vérifie si la version Laravel est >= à la version spécifiée
+     * Vérifie si la version Laravel est >= à la version spécifiée.
      */
     public static function isVersion(string $version): bool
     {
@@ -20,7 +26,7 @@ class LaravelVersionHelper
     }
 
     /**
-     * Vérifie si c'est Laravel 10.x
+     * Vérifie si c'est Laravel 10.x.
      */
     public static function isLaravel10(): bool
     {
@@ -28,7 +34,7 @@ class LaravelVersionHelper
     }
 
     /**
-     * Vérifie si c'est Laravel 11.x
+     * Vérifie si c'est Laravel 11.x.
      */
     public static function isLaravel11(): bool
     {
@@ -36,7 +42,7 @@ class LaravelVersionHelper
     }
 
     /**
-     * Vérifie si c'est Laravel 12.x ou plus
+     * Vérifie si c'est Laravel 12.x ou plus.
      */
     public static function isLaravel12Plus(): bool
     {
@@ -44,7 +50,7 @@ class LaravelVersionHelper
     }
 
     /**
-     * Retourne la version majeure de Laravel
+     * Retourne la version majeure de Laravel.
      */
     public static function getMajorVersion(): int
     {
@@ -54,29 +60,22 @@ class LaravelVersionHelper
     }
 
     /**
-     * Retourne le chemin des migrations selon la version Laravel
+     * Retourne le chemin des migrations.
+     *
+     * Identique sur toutes les versions Laravel supportées (10-13).
      */
     public static function getMigrationsPath(): string
     {
-        if (self::isLaravel11()) {
-            return database_path('migrations');
-        }
-
         return database_path('migrations');
     }
 
     /**
-     * Retourne la configuration des middlewares selon la version
+     * Retourne la configuration des middlewares.
+     *
+     * Identique sur toutes les versions Laravel supportées (10-13).
      */
     public static function getMiddlewareConfig(): array
     {
-        if (self::isLaravel11()) {
-            return [
-                'web' => ['web'],
-                'api' => ['api'],
-            ];
-        }
-
         return [
             'web' => ['web'],
             'api' => ['api'],
@@ -84,53 +83,48 @@ class LaravelVersionHelper
     }
 
     /**
-     * Retourne la méthode de publication des assets selon la version
+     * Retourne la méthode de publication des assets.
+     *
+     * @deprecated since 4.0.0, always returns 'publishes'. Scheduled for removal in 5.0.0.
      */
     public static function getPublishingMethod(): string
     {
-        if (self::isLaravel12Plus()) {
-            return 'publishesWith';
-        }
-
         return 'publishes';
     }
 
     /**
-     * Vérifie si les enums PHP sont supportés
+     * Vérifie si les enums PHP sont supportés.
+     *
+     * @deprecated since 4.0.0, always true (composer.json requires PHP >= 8.1). Scheduled for removal in 5.0.0.
      */
     public static function supportsEnums(): bool
     {
-        return version_compare(PHP_VERSION, '8.1.0', '>=');
+        return true;
     }
 
     /**
-     * Retourne la configuration de cache appropriée
+     * Retourne la configuration de cache appropriée.
      */
     public static function getCacheConfig(): array
     {
-        $config = [
+        return [
             'default_ttl' => 3600,
             'prefix' => 'lara_sgmef_qr',
         ];
-
-        if (self::isLaravel11()) {
-            $config['store'] = 'file';
-        }
-
-        return $config;
     }
 
     /**
-     * Retourne la configuration des tests selon la version
+     * Retourne la configuration des tests selon la version.
      */
     public static function getTestConfig(): array
     {
         return [
-            'phpunit_version' => self::isLaravel12Plus() ? '^11.0' : '^10.0',
+            'phpunit_version' => '^10.0|^11.0|^12.0',
             'testbench_version' => match (self::getMajorVersion()) {
                 10 => '^8.0',
                 11 => '^9.0',
-                default => '^10.0',
+                12 => '^10.0',
+                default => '^11.0',
             },
         ];
     }

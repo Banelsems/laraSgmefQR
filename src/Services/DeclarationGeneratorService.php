@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Banelsems\LaraSgmefQr\Services;
 
 use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
-use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\File;
@@ -14,8 +13,7 @@ use Spatie\Browsershot\Browsershot;
 class DeclarationGeneratorService
 {
     public function __construct(
-        protected InvoiceManagerInterface $invoiceManager,
-        protected SgmefApiClientInterface $apiClient
+        protected InvoiceManagerInterface $invoiceManager
     ) {
     }
 
@@ -47,14 +45,14 @@ class DeclarationGeneratorService
                     unset($originalData['reference']);
 
                     $originalInvoice = $this->invoiceManager->createInvoice(InvoiceRequestDto::fromArray($originalData));
-                    $this->invoiceManager->confirmInvoice($originalInvoice->uid);
-                    $requestData['reference'] = $originalInvoice->uid;
+                    $this->invoiceManager->confirmInvoice($originalInvoice->requireUid());
+                    $requestData['reference'] = $originalInvoice->requireUid();
                 }
 
                 $invoiceDto = InvoiceRequestDto::fromArray($requestData);
 
                 $createdInvoice = $this->invoiceManager->createInvoice($invoiceDto);
-                $confirmedInvoice = $this->invoiceManager->confirmInvoice($createdInvoice->uid);
+                $confirmedInvoice = $this->invoiceManager->confirmInvoice($createdInvoice->requireUid());
 
                 $html = view('lara-sgmef-qr::declaration.invoice_screenshot', [
                     'invoice' => $confirmedInvoice,

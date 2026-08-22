@@ -7,7 +7,7 @@ namespace Banelsems\LaraSgmefQr\Http\Controllers;
 use Banelsems\LaraSgmefQr\Models\Invoice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
+use Illuminate\Contracts\View\View;
 
 /**
  * Contrôleur pour le tableau de bord

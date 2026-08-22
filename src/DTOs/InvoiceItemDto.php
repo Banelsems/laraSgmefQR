@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Banelsems\LaraSgmefQr\DTOs;
 
+use Banelsems\LaraSgmefQr\Support\Money;
 use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Attributes\Validation\GreaterThan;
 use Spatie\LaravelData\Attributes\Validation\GreaterThanOrEqualTo;
@@ -49,8 +50,41 @@ class InvoiceItemDto extends Data
             }
 
             if (filled($priceModification) && $originalPrice === null) {
-                $validator->errors()->add('originalPrice', 'Le prix original est requis lorsqu’une modification de prix est renseignée.');
+                $validator->errors()->add('originalPrice', 'Le prix original est requis lorsqu\'une modification de prix est renseignée.');
             }
         });
     }
+
+    /**
+     * Retourne le prix unitaire en XOF (entier) via le value object Money.
+     */
+    public function priceMoney(): Money
+    {
+        return Money::from($this->price);
+    }
+
+    /**
+     * Retourne le total de ligne (prix × quantité) en XOF via Money.
+     */
+    public function lineTotal(): Money
+    {
+        return $this->priceMoney()->multiply((float) $this->quantity);
+    }
+
+    /**
+     * Retourne la taxe spécifique en XOF (0 si absente).
+     */
+    public function taxSpecificMoney(): Money
+    {
+        return Money::from($this->taxSpecific ?? 0);
+    }
+
+    /**
+     * Retourne le prix original en XOF (null si absent).
+     */
+    public function originalPriceMoney(): ?Money
+    {
+        return $this->originalPrice !== null ? Money::from($this->originalPrice) : null;
+    }
 }
+

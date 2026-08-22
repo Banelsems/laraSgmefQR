@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Banelsems\LaraSgmefQr\Http\Controllers;
 
 use Banelsems\LaraSgmefQr\Contracts\InvoiceManagerInterface;
-use Banelsems\LaraSgmefQr\Contracts\SgmefApiClientInterface;
+use Banelsems\LaraSgmefQr\Contracts\InvoiceRepositoryInterface;
+use Banelsems\LaraSgmefQr\Contracts\ReferenceDataProviderInterface;
 use Banelsems\LaraSgmefQr\DTOs\InvoiceRequestDto;
+use Banelsems\LaraSgmefQr\Http\Filters\InvoiceFilters;
 use Banelsems\LaraSgmefQr\Http\Requests\InvoiceRequest;
 use Banelsems\LaraSgmefQr\Models\Invoice;
 use Banelsems\LaraSgmefQr\Services\TaxCalculatorService;
@@ -15,8 +17,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\View\View;
-use Spatie\LaravelData\Exceptions\ValidationException;
+use Illuminate\Contracts\View\View;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Contrôleur pour la gestion des factures
@@ -25,8 +27,10 @@ class InvoiceController extends BaseController
 {
     public function __construct(
         private readonly InvoiceManagerInterface $invoiceManager,
-        private readonly SgmefApiClientInterface $apiClient,
-        private readonly TaxCalculatorService $taxCalculator
+        private readonly TaxCalculatorService $taxCalculator,
+        private readonly InvoiceRepositoryInterface $repository,
+        private readonly InvoiceFilters $filters,
+        private readonly ReferenceDataProviderInterface $referenceDataProvider
     ) {
     }
 
@@ -35,49 +39,8 @@ class InvoiceController extends BaseController
      */
     public function index(Request $request): View
     {
-        $query = Invoice::query()->orderBy('created_at', 'desc');
-
-        // Filtres
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->input('type'));
-        }
-
-        if ($request->filled('ifu')) {
-            $query->where('ifu', $request->input('ifu'));
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->input('date_from'));
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->input('date_to'));
-        }
-
-        if ($request->filled('amount_min')) {
-            $query->where('total_amount', '>=', (float) $request->input('amount_min'));
-        }
-
-        if ($request->filled('amount_max')) {
-            $query->where('total_amount', '<=', (float) $request->input('amount_max'));
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('uid', 'like', "%{$search}%")
-                  ->orWhere('customer_ifu', 'like', "%{$search}%")
-                  ->orWhere('mecf_code', 'like', "%{$search}%")
-                  ->orWhere('reference', 'like', "%{$search}%")
-                  ->orWhere('raw_request->client->name', 'like', "%{$search}%");
-            });
-        }
-
-        $invoices = $query->paginate(15);
+        $filterArray = $this->filters->fromRequest($request);
+        $invoices = $this->repository->paginate($filterArray);
 
         return view('lara-sgmef-qr::invoices.index', compact('invoices'));
     }
@@ -87,22 +50,9 @@ class InvoiceController extends BaseController
      */
     public function create(): View
     {
-        try {
-            $taxGroups = $this->apiClient->getTaxGroups();
-            $paymentTypes = $this->apiClient->getPaymentTypes();
-            $invoiceTypes = $this->apiClient->getInvoiceTypes();
-        } catch (\Throwable) {
-            $taxGroups = collect(['A' => 0, 'B' => 18, 'C' => 19, 'D' => 23, 'E' => 0, 'F' => 0])
-                ->map(fn ($rate, $code) => ['code' => $code, 'name' => "Groupe {$code}", 'rate' => $rate])
-                ->values()
-                ->all();
-            $paymentTypes = collect(['ESPECES', 'VIREMENT', 'CARTEBANCAIRE', 'MOBILEMONEY', 'CHEQUES', 'CREDIT', 'AUTRE'])
-                ->map(fn ($type) => ['type' => $type, 'description' => $type])
-                ->all();
-            $invoiceTypes = collect(['FV', 'FA', 'EV', 'EA'])
-                ->map(fn ($type) => ['type' => $type, 'description' => $type])
-                ->all();
-        }
+        $taxGroups = $this->referenceDataProvider->getTaxGroups();
+        $paymentTypes = $this->referenceDataProvider->getPaymentTypes();
+        $invoiceTypes = $this->referenceDataProvider->getInvoiceTypes();
 
         return view('lara-sgmef-qr::invoices.create', compact(
             'taxGroups',
@@ -232,7 +182,7 @@ class InvoiceController extends BaseController
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $e->errors(),
+                'errors' => $e->validator->errors()->toArray(),
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
