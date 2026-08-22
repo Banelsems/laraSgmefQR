@@ -38,6 +38,25 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Carbon\Carbon      $created_at
  * @property \Carbon\Carbon      $updated_at
  * @property \Carbon\Carbon|null $deleted_at
+ *
+ * @method static Builder<static> query()
+ * @method static Builder<static> where(string|callable $column, mixed $operator = null, mixed $value = null)
+ * @method static Builder<static> whereDate(string $column, mixed $operator, mixed $value = null)
+ * @method static Builder<static> whereNotNull(string $column)
+ * @method static Builder<static> whereNull(string $column)
+ * @method static Builder<static> select(mixed ...$columns)
+ * @method static Builder<static> orderBy(string $column, string $direction = 'asc')
+ * @method static Builder<static> orderByDesc(string $column)
+ * @method static Builder<static> limit(int $value)
+ * @method static int            count()
+ * @method static mixed          sum(string $column)
+ * @method static static|null    first()
+ * @method static \Illuminate\Database\Eloquent\Collection<int, static> get()
+ * @method static static         create(array<string, mixed> $attributes = [])
+ * @method static \Illuminate\Contracts\Pagination\LengthAwarePaginator paginate(int $perPage = 15)
+ * @method static Builder<static> pending()
+ * @method static Builder<static> confirmed()
+ * @method static Builder<static> withError()
  */
 class Invoice extends Model
 {

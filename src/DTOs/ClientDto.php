@@ -12,11 +12,11 @@ use Spatie\LaravelData\Data;
 class ClientDto extends Data
 {
     public function __construct(
+        #[Required]
+        public readonly string $name,
         #[Nullable]
         #[Regex('/^\d{13}$/')]
         public readonly ?string $ifu = null,
-        #[Required]
-        public readonly string $name,
         public readonly ?string $contact = null,
         public readonly ?string $address = null
     ) {

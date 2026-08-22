@@ -4,14 +4,19 @@ Package Laravel pour intégrer l'API e-MECeF / SyGM-eMCF de la Direction Génér
 
 [![Latest Version](https://img.shields.io/github/v/release/banelsems/laraSgmefQR)](https://github.com/Banelsems/laraSgmefQR/releases)
 [![License](https://img.shields.io/github/license/banelsems/laraSgmefQR)](LICENSE)
-[![PHP Version](https://img.shields.io/badge/php-%5E8.1%20%7C%20%5E8.2%20%7C%20%5E8.3-blue)](https://php.net)
-[![Laravel Version](https://img.shields.io/badge/laravel-10%20%7C%2011%20%7C%2012-red)](https://laravel.com)
+[![PHP Version](https://img.shields.io/badge/php-%5E8.1%20%7C%20%5E8.2%20%7C%20%5E8.3%20%7C%20%5E8.4-blue)](https://php.net)
+[![Laravel Version](https://img.shields.io/badge/laravel-10%20%7C%2011%20%7C%2012%20%7C%2013-red)](https://laravel.com)
+[![Tests](https://img.shields.io/badge/tests-368%20passing-brightgreen)](https://github.com/Banelsems/laraSgmefQR)
+[![PHPStan](https://img.shields.io/badge/phpstan-level%208-0%20errors-brightgreen)](https://phpstan.org)
 
-LaraSgmefQR v3.0.3 fournit un client API, des DTOs, une interface web, des jobs Laravel et des outils de conformité pour créer, confirmer, annuler, exporter et documenter des factures e-MECeF.
+LaraSgmefQR v4.0.0 fournit un client API, des DTOs, une interface web, des jobs Laravel et des outils de conformité pour créer, confirmer, annuler, vérifier, exporter et documenter des factures e-MECeF.
 
-## Fonctionnalites v3
+## Fonctionnalites v4
 
 - Client API aligne sur les endpoints officiels DGI : groupes de taxe, types de facture, types de paiement, creation, lecture, confirmation et annulation de facture.
+- **Annulation alternative** : `POST /invoice/cancel` (body-based) en plus du `PUT /cancel` existant.
+- **VerificationService** : verification post-confirmation structuree (8 controles) avec URL de verification DGI.
+- **SgmefSecurityGuard** : pre-validation JWT + rate limiting outgoing (configurable via `SGMEF_RATE_LIMIT_PER_MINUTE`).
 - Types de facture `FV`, `FA`, `EV`, `EA`, avec `reference` obligatoire pour les avoirs `FA/EA`.
 - Paiements officiels : `ESPECES`, `VIREMENT`, `CARTEBANCAIRE`, `MOBILEMONEY`, `CHEQUES`, `CREDIT`, `AUTRE`.
 - Articles avec groupes de taxe `A-F`, taxe specifique `taxSpecific`, prix original `originalPrice` et modification `priceModification`.
@@ -19,7 +24,10 @@ LaraSgmefQR v3.0.3 fournit un client API, des DTOs, une interface web, des jobs 
 - Support multi-IFU via `IfuResolverInterface`.
 - Jobs Laravel pour creation, confirmation et expiration locale des factures en attente apres 2 minutes.
 - Export STAT CSV et generation du dossier d'auto-declaration e-MECeF.
-- Dashboard avec KPI, filtres, recherche, mode sombre et polling configurable.
+- **Dashboard v4** : KPIs cliquables, graphique 30 jours, Top 5 clients, alertes visuelles (factures expirees, taux d'erreur API).
+- **Interface responsive** : dark mode complet (auto-detection + toggle), sidebar mobile, notifications temps reel.
+- **Liste factures** : tri par colonnes cliquables, filtres persistants dans l'URL, pagination avec query string.
+- **CI/CD** : GitHub Actions (PHP 8.2/8.3/8.4 x Laravel 10/11/12, PHPStan level 8, PHP-CS-Fixer).
 
 ## Installation
 
@@ -60,6 +68,8 @@ SGMEF_POLLING_SECONDS=30
 SGMEF_QUEUE_ENABLED=false
 SGMEF_QUEUE_CONNECTION=sync
 
+SGMEF_RATE_LIMIT_PER_MINUTE=60
+
 SGMEF_COMPANY_NAME="Votre entreprise"
 SGMEF_RCCM="RCCM/XXXX/XX/XXXX"
 SGMEF_PHONE="XX XX XX XX"
@@ -83,6 +93,7 @@ L'interface est disponible sur `/sgmef` par defaut :
 - `/sgmef` : dashboard
 - `/sgmef/invoices` : liste et filtres
 - `/sgmef/invoices/create` : creation de facture
+- `/sgmef/invoices/{uid}/verify` : verification post-confirmation
 - `/sgmef/config` : configuration
 
 ## Utilisation PHP
@@ -323,6 +334,57 @@ Necessite `ext-gd`. Sans `ext-gd`, une `RuntimeException` explicite est levee
 (png() ne retourne jamais silencieusement du SVG). Utilisez `svg()` pour un
 format vectoriel sans dependance.
 
+### Verification post-confirmation
+
+Apres confirmation, verifiez l'integrite d'une facture via le `VerificationService` :
+
+```php
+use Banelsems\LaraSgmefQr\Services\VerificationService;
+
+$verification = app(VerificationService::class)->verify($confirmedInvoice);
+
+if ($verification->valid) {
+    echo "Facture conforme. URL: " . $verification->verificationUrl;
+} else {
+    foreach ($verification->issues as $issue) {
+        echo "Probleme: $issue\n";
+    }
+}
+```
+
+Le service verifie 8 controles : statut confirmed, UID present, QR code present
+et valide, code MECeF present, date/heure, counters, NIM.
+
+### Annulation alternative (POST)
+
+En plus du `PUT /cancel` standard, une annulation alternative via `POST /invoice/cancel` est disponible :
+
+```php
+$manager->cancelInvoiceByUid($invoice->uid);  // PUT /cancel (standard)
+$manager->cancelInvoiceByPost($invoice->uid); // POST /invoice/cancel (alternative)
+```
+
+### Securite : rate limiting et pre-validation JWT
+
+Le `SgmefSecurityGuard` valide le token JWT avant chaque appel API et limite
+le nombre de requetes sortantes par minute :
+
+```env
+SGMEF_RATE_LIMIT_PER_MINUTE=60  # 0 pour desactiver
+```
+
+L'event `SgmefAuthenticationAlert` est dispatche sur les reponses 401/403.
+Ecoutez-le pour integrer un systeme d'alerte de securite :
+
+```php
+use Banelsems\LaraSgmefQr\Events\SgmefAuthenticationAlert;
+
+Event::listen(SgmefAuthenticationAlert::class, function ($event) {
+    // $event->httpStatus, $event->endpoint, $event->timestamp
+    Log::warning("Authentification DGI echouee", (array) $event);
+});
+```
+
 ## Commandes
 
 Generer un export STAT CSV :
@@ -364,6 +426,7 @@ use Banelsems\LaraSgmefQr\Enums\InvoiceStatusEnum;
 InvoiceStatusEnum::PENDING;
 InvoiceStatusEnum::CONFIRMED;
 InvoiceStatusEnum::CANCELLED;
+InvoiceStatusEnum::EXPIRED;
 InvoiceStatusEnum::ERROR;
 ```
 
@@ -403,16 +466,23 @@ php vendor/bin/phpunit
 composer run-script analyse
 ```
 
+Resultats actuels :
+
+- **368 tests, 665 assertions** — tous passants.
+- **PHPStan level 8** — 0 erreurs.
+- **composer validate** — valide.
+- **CI/CD GitHub Actions** — PHP 8.2/8.3/8.4 x Laravel 10/11/12.
+
 Remarques :
 
 - PHPUnit peut signaler `No code coverage driver available` si Xdebug/PCOV n'est pas installe.
-- PHPStan est conserve dans le workflow, mais certaines bases Laravel/Eloquent peuvent necessiter des annotations ou une configuration dediee.
+- Les annotations `@method` sur le modele `Invoice` documentent les methodes magiques Eloquent pour PHPStan.
 
 ## Compatibilite
 
-- PHP `^8.1|^8.2|^8.3`
-- Laravel `^10.0|^11.0|^12.0`
-- Extensions PHP : `curl`, `json`
+- PHP `^8.1|^8.2|^8.3|^8.4`
+- Laravel `^10.0|^11.0|^12.0|^13.0`
+- Extensions PHP : `curl`, `json`, `gd` (optionnel, pour PNG QR codes)
 - Base de donnees compatible Laravel migrations
 
 ## Ressources

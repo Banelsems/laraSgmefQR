@@ -136,7 +136,7 @@ class InvoiceEventsTest extends TestCase
 
     private function buildValidDto(): InvoiceRequestDto
     {
-        $client = new ClientDto(null, 'John Doe', '+229 12345678', '123 Rue Test');
+        $client = new ClientDto('John Doe', null, '+229 12345678', '123 Rue Test');
         $operator = new OperatorDto(1, 'Operator Test');
         $item = new InvoiceItemDto('Article 1', 1000, 1, 'B');
         $payment = new PaymentDto('ESPECES', 1000);

@@ -103,7 +103,7 @@ class InvoiceRequest extends FormRequest
     {
         // Nettoyer et formater les données si nécessaire
         if ($this->has('items')) {
-            $items = collect($this->input('items'))->map(function ($item) {
+            $items = collect((array) $this->input('items'))->map(function ($item) {
                 return [
                     'name' => trim($item['name'] ?? ''),
                     'price' => (float) ($item['price'] ?? 0),
@@ -120,7 +120,7 @@ class InvoiceRequest extends FormRequest
         }
 
         if ($this->has('payment')) {
-            $payment = collect($this->input('payment'))->map(function ($pay) {
+            $payment = collect((array) $this->input('payment'))->map(function ($pay) {
                 return [
                     'name' => trim($pay['name'] ?? ''),
                     'amount' => (float) ($pay['amount'] ?? 0),

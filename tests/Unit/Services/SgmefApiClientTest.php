@@ -96,7 +96,7 @@ class SgmefApiClientTest extends TestCase
      */
     public function test_can_create_invoice(): void
     {
-        $client = new ClientDto(null, 'John Doe');
+        $client = new ClientDto('John Doe', null);
         $operator = new OperatorDto(1, 'Operator Test');
         $item = new InvoiceItemDto('Article 1', 1000, 1, 'B');
         $payment = new PaymentDto('ESPECES', 1000);

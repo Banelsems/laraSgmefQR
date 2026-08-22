@@ -1,5 +1,58 @@
 # Upgrade Guide
 
+## Lot 8-10 : API compliance, UI/UX, finalisation
+
+### ClientDto constructor parameter order
+
+`ClientDto` constructor parameters have been reordered to fix a PHP 8.1
+deprecation (required parameter after optional). `$name` is now the first
+parameter:
+
+```php
+// Before
+new ClientDto(ifu: null, name: 'John Doe');
+
+// After
+new ClientDto('John Doe', ifu: null);
+```
+
+If you use named arguments (`ClientDto::from()` or `new ClientDto(name: '...')`),
+no change is needed.
+
+### New configuration option: rate_limit_per_minute
+
+A new `rate_limit_per_minute` config key has been added (default: 60).
+Add it to your `config/lara_sgmef_qr.php`:
+
+```php
+'security' => [
+    'rate_limit_per_minute' => env('SGMEF_RATE_LIMIT_PER_MINUTE', 60),
+],
+```
+
+Or set the environment variable:
+
+```env
+SGMEF_RATE_LIMIT_PER_MINUTE=60
+```
+
+Set to `0` to disable rate limiting.
+
+### New route: GET /invoices/{uid}/verify
+
+A new verification endpoint is available. No action required if you use
+the default route file. If you publish routes manually, add:
+
+```php
+Route::get('/invoices/{uid}/verify', [InvoiceController::class, 'verify'])
+    ->name('invoices.verify');
+```
+
+### New events
+
+- `SgmefAuthenticationAlert`: Dispatched when the API returns 401 or 403.
+  Listen to it for security monitoring or alerting.
+
 ## Lot 7 : Queue, Jobs, expiration et résilience asynchrone
 
 ### New InvoiceStatusEnum::EXPIRED

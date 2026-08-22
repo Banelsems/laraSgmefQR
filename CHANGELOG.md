@@ -5,7 +5,42 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - Lot 7 : Queue, Jobs, expiration et résilience asynchrone
+## [Unreleased] - Lot 8-10 : API compliance, UI/UX, finalisation
+
+### Added
+
+- **POST /invoice/cancel** : Alternative body-based cancellation endpoint (`SgmefApiClientInterface::cancelInvoiceByPost`, `InvoiceManager::cancelInvoiceByPost` with shared `performCancellation` logic).
+- **VerificationService** : Structured post-confirmation verification with `VerificationResultDto` (8 checks: confirmed, uid, qr present, qr valid, mecf code, datetime, counters, nim) + DGI verification URL.
+- **GET /invoices/{uid}/verify** : Route exposing the verification endpoint.
+- **SgmefSecurityGuard** : Pre-request JWT token validation + outgoing rate limiting (configurable via `SGMEF_RATE_LIMIT_PER_MINUTE`, default 60).
+- **SgmefAuthenticationAlert** : Event dispatched on 401/403 API responses.
+- **Dashboard** : Visual alerts for expired pending invoices and high API error rate (>10%).
+- **Dashboard** : 30-day trend bar chart and Top 5 clients panel (previously computed but never rendered).
+- **Dashboard** : KPI cards are clickable links to filtered invoice lists.
+- **Invoice list** : Sortable column headers (date, amount, status) with active direction indicator.
+- **Layout** : Full dark mode with `prefers-color-scheme` detection + localStorage persistence.
+- **Layout** : Responsive sidebar (fixed on desktop, slide-in overlay on mobile) with burger menu.
+- **Layout** : Notification bell badge with live polling for pending invoices.
+- **Toast notifications** : Alpine.js-based toast system with `@notify` window event support and auto-dismiss.
+- **CI/CD** : GitHub Actions workflow (tests on PHP 8.2/8.3/8.4 × Laravel 10/11/12, PHPStan, PHP-CS-Fixer).
+
+### Changed
+
+- **ClientDto** : Reordered constructor parameters (`$name` now first) to fix PHP 8.1 deprecation (required parameter after optional).
+- **Layout** : Removed duplicate Alpine.js and Font Awesome includes.
+- **Toast** : Flash messages now dispatched through the same Alpine.js toast system.
+- **Invoice list** : Pagination appends query string for filter persistence across pages.
+- **phpstan.neon** : Added `@method` annotations on `Invoice` model for Eloquent magic methods; targeted `ignoreErrors` for Spatie Data `collection()`.
+
+### Fixed
+
+- **PHPStan** : All 31 errors resolved (Eloquent static methods via `@method` annotations, Spatie Data `collection()` via ignore pattern, `collect()` template types via explicit `(array)` cast, ClientDto parameter order).
+- **InvoiceRequest** : `collect()` calls now cast `$this->input()` to `(array)` to resolve PHPStan template type errors.
+
+### Security
+
+- **SgmefSecurityGuard** : Rejects empty or malformed JWT tokens before making API calls, reducing unnecessary external requests.
+- **Rate limiting** : Outgoing API calls are rate-limited to prevent accidental DDoS of the DGI API.
 
 ### Added
 
