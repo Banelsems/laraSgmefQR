@@ -24,9 +24,11 @@ use Banelsems\LaraSgmefQr\Exceptions\SgmefValidationException;
 use Banelsems\LaraSgmefQr\Infrastructure\NativeSleeper;
 use Banelsems\LaraSgmefQr\Infrastructure\SgmefLogSanitizer;
 use Banelsems\LaraSgmefQr\Infrastructure\SgmefRetryPolicy;
+use Banelsems\LaraSgmefQr\Infrastructure\SgmefSecurityGuard;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory as HttpClient;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -48,13 +50,15 @@ class SgmefApiClient implements SgmefApiClientInterface
     private readonly SgmefLogSanitizer $sanitizer;
     private readonly SgmefRetryPolicy $retryPolicy;
     private readonly SleeperInterface $sleeper;
+    private readonly SgmefSecurityGuard $securityGuard;
 
     public function __construct(
         private readonly HttpClient $httpClient,
         ?string $baseUrl = null,
         ?string $token = null,
         array $httpOptions = [],
-        ?SleeperInterface $sleeper = null
+        ?SleeperInterface $sleeper = null,
+        ?SgmefSecurityGuard $securityGuard = null
     ) {
         $rawUrl = $baseUrl ?? config('lara_sgmef_qr.api_url');
         $this->baseUrl = str_ends_with($rawUrl, '/api') ? $rawUrl : rtrim($rawUrl, '/') . '/api';
@@ -67,6 +71,9 @@ class SgmefApiClient implements SgmefApiClientInterface
         $this->sanitizer = new SgmefLogSanitizer();
         $this->sleeper = $sleeper ?? new NativeSleeper();
         $this->retryPolicy = new SgmefRetryPolicy();
+        $this->securityGuard = $securityGuard ?? new SgmefSecurityGuard(
+            (int) config('lara_sgmef_qr.rate_limit_per_minute', 60)
+        );
     }
 
     /**
@@ -184,6 +191,16 @@ class SgmefApiClient implements SgmefApiClientInterface
     }
 
     /**
+     * Annulation alternative via POST /invoice/cancel (UID dans le body).
+     *
+     * Non retryable : POST non-idempotent.
+     */
+    public function cancelInvoiceByPost(string $uid): array
+    {
+        return $this->makeRequest('POST', '/invoice/cancel', ['uid' => $uid]);
+    }
+
+    /**
      * Effectue une requête HTTP vers l'API avec retry sur opérations sûres.
      */
     private function makeRequest(string $method, string $endpoint, array $data = []): array
@@ -226,6 +243,10 @@ class SgmefApiClient implements SgmefApiClientInterface
      */
     private function executeRequest(string $method, string $endpoint, array $data, string $requestId): array
     {
+        // Sécurité : pré-validation du token + rate limiting outgoing
+        $this->securityGuard->validateToken($this->token);
+        $this->securityGuard->enforceRateLimit();
+
         $url = $this->baseUrl . $endpoint;
 
         $metadata = $this->requestMetadata();
@@ -381,9 +402,14 @@ class SgmefApiClient implements SgmefApiClientInterface
         $message = "Erreur API SyGM-eMCF [{$errorCode}]: {$errorMessage}";
 
         match (true) {
-            in_array($status, [401, 403], true) => throw new SgmefAuthenticationException(
-                $message, 0, null, $errorData, $status, $errorCode, $context
-            ),
+            in_array($status, [401, 403], true) => (function () use ($endpoint, $status, $errorCode, $message, $errorData, $context) {
+                Event::dispatch(new \Banelsems\LaraSgmefQr\Events\SgmefAuthenticationAlert(
+                    $endpoint, $status, $errorCode, $message
+                ));
+                throw new SgmefAuthenticationException(
+                    $message, 0, null, $errorData, $status, $errorCode, $context
+                );
+            })(),
             in_array($status, [400, 422], true) => throw new SgmefValidationException(
                 $message, 0, null, $errorData, $status, $errorCode, $context
             ),

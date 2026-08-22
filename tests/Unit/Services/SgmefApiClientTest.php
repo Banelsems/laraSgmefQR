@@ -35,7 +35,7 @@ class SgmefApiClientTest extends TestCase
         $this->apiClient = new SgmefApiClient(
             $this->httpClient,
             'https://test-api.example.com',
-            'test-token',
+            'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.abc123sign',
             ['timeout' => 30]
         );
     }
@@ -68,7 +68,7 @@ class SgmefApiClientTest extends TestCase
         $this->httpClient
             ->shouldReceive('withHeaders')
             ->with([
-                'Authorization' => 'Bearer test-token',
+                'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.abc123sign',
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])
@@ -219,7 +219,7 @@ class SgmefApiClientTest extends TestCase
      */
     public function test_can_set_credentials(): void
     {
-        $this->apiClient->setCredentials('new-token');
+        $this->apiClient->setCredentials('eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZXcifQ.abc123sign');
 
         // Vérifier que le nouveau token est utilisé
         $response = Mockery::mock(Response::class);
@@ -231,7 +231,7 @@ class SgmefApiClientTest extends TestCase
         $this->httpClient
             ->shouldReceive('withHeaders')
             ->with([
-                'Authorization' => 'Bearer new-token',
+                'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZXcifQ.abc123sign',
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])

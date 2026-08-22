@@ -66,6 +66,13 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
             return new SgmefApiClientFactory($app->make(HttpClient::class));
         });
 
+        // SgmefSecurityGuard : singleton, pré-validation token + rate limiting outgoing
+        $this->app->singleton(\Banelsems\LaraSgmefQr\Infrastructure\SgmefSecurityGuard::class, function () {
+            return new \Banelsems\LaraSgmefQr\Infrastructure\SgmefSecurityGuard(
+                (int) config('lara_sgmef_qr.rate_limit_per_minute', 60)
+            );
+        });
+
         // SgmefApiClientInterface : singleton construit depuis la config fixe.
         // Le client est immutable après instanciation (setters dépréciés).
         // Safe en singleton car la config ne change pas pendant le cycle de vie.
@@ -92,6 +99,9 @@ class LaraSgmefQRServiceProvider extends ServiceProvider
 
         // QrCodeService : singleton, stateless
         $this->app->singleton(QrCodeService::class);
+
+        // VerificationService : singleton, dépend du QrCodeService
+        $this->app->singleton(\Banelsems\LaraSgmefQr\Services\VerificationService::class);
 
         // StatExportService : singleton, stateless
         $this->app->singleton(StatExportService::class);

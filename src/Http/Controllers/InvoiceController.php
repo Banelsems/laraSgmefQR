@@ -12,6 +12,7 @@ use Banelsems\LaraSgmefQr\Http\Filters\InvoiceFilters;
 use Banelsems\LaraSgmefQr\Http\Requests\InvoiceRequest;
 use Banelsems\LaraSgmefQr\Models\Invoice;
 use Banelsems\LaraSgmefQr\Services\TaxCalculatorService;
+use Banelsems\LaraSgmefQr\Services\VerificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +31,8 @@ class InvoiceController extends BaseController
         private readonly TaxCalculatorService $taxCalculator,
         private readonly InvoiceRepositoryInterface $repository,
         private readonly InvoiceFilters $filters,
-        private readonly ReferenceDataProviderInterface $referenceDataProvider
+        private readonly ReferenceDataProviderInterface $referenceDataProvider,
+        private readonly VerificationService $verificationService
     ) {
     }
 
@@ -145,6 +147,27 @@ class InvoiceController extends BaseController
                 ->with('success', 'Facture synchronisée avec succès !');
         } catch (\Exception $e) {
             return back()->withErrors(['sync' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Vérification post-confirmation d'une facture.
+     */
+    public function verify(string $uid): JsonResponse
+    {
+        try {
+            $invoice = $this->invoiceManager->getInvoice($uid);
+            $result = $this->verificationService->verify($invoice);
+
+            return response()->json([
+                'success' => true,
+                'data' => $result,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
         }
     }
 

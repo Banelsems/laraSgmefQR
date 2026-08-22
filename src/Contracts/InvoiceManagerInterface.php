@@ -20,9 +20,14 @@ interface InvoiceManagerInterface
     public function confirmInvoice(string $uid): Invoice;
 
     /**
-     * Annule une facture pending ou confirmée.
+     * Annule une facture pending ou confirmée via PUT /invoice/{uid}/cancel.
      */
     public function cancelInvoice(string $uid): Invoice;
+
+    /**
+     * Annule une facture via POST /invoice/cancel (méthode alternative body-based).
+     */
+    public function cancelInvoiceByPost(string $uid): Invoice;
 
     /**
      * Récupère une facture par son UID local.

@@ -28,7 +28,7 @@ class SgmefApiClientExceptionMappingTest extends TestCase
         $factory = new SgmefApiClientFactory($this->app->make(HttpClient::class));
         $this->client = $factory->make(new SgmefConnectionConfig(
             'https://api.example.com',
-            'test-token'
+            'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.abc123sign'
         ));
     }
 

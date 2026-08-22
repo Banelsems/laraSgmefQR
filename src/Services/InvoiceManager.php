@@ -194,9 +194,27 @@ class InvoiceManager implements InvoiceManagerInterface
     }
 
     /**
-     * Annule une facture.
+     * Annule une facture via PUT /invoice/{uid}/cancel.
      */
     public function cancelInvoice(string $uid): Invoice
+    {
+        return $this->performCancellation($uid, fn (string $apiUid) => $this->apiClient->cancelInvoice($apiUid));
+    }
+
+    /**
+     * Annule une facture via POST /invoice/cancel (méthode alternative).
+     */
+    public function cancelInvoiceByPost(string $uid): Invoice
+    {
+        return $this->performCancellation($uid, fn (string $apiUid) => $this->apiClient->cancelInvoiceByPost($apiUid));
+    }
+
+    /**
+     * Logique commune d'annulation partagée par les deux méthodes.
+     *
+     * @param  callable(string): array  $apiCall
+     */
+    private function performCancellation(string $uid, callable $apiCall): Invoice
     {
         $invoice = $this->repository->findByUid($uid);
 
@@ -206,9 +224,9 @@ class InvoiceManager implements InvoiceManagerInterface
             );
         }
 
-        return DB::transaction(function () use ($invoice) {
+        return DB::transaction(function () use ($invoice, $apiCall) {
             try {
-                $cancelResponse = $this->apiClient->cancelInvoice($invoice->requireUid());
+                $cancelResponse = $apiCall($invoice->requireUid());
 
                 $this->repository->update($invoice, [
                     'status' => InvoiceStatusEnum::CANCELLED,

@@ -40,6 +40,7 @@ Route::prefix('invoices')->name('sgmef.invoices.')->group(function () {
     Route::post('/{uid}/confirm', [InvoiceController::class, 'confirm'])->name('confirm');
     Route::post('/{uid}/cancel', [InvoiceController::class, 'cancel'])->name('cancel');
     Route::get('/{uid}/sync', [InvoiceController::class, 'sync'])->name('sync');
+    Route::get('/{uid}/verify', [InvoiceController::class, 'verify'])->name('verify');
 
     // Export et impression
     Route::get('/{uid}/pdf', [InvoiceController::class, 'downloadPdf'])->name('pdf');

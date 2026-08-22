@@ -62,9 +62,17 @@ interface SgmefApiClientInterface
     public function confirmInvoice(string $uid, bool $withQrCode = false): SecurityElementsDto;
 
     /**
-     * Annule une facture.
+     * Annule une facture via PUT /invoice/{uid}/cancel.
      */
     public function cancelInvoice(string $uid): array;
+
+    /**
+     * Annule une facture via POST /invoice/cancel (méthode alternative).
+     *
+     * L'UID est envoyé dans le corps de la requête plutôt que dans l'URL.
+     * Utile lorsque l'API e-MECeF exige une annulation body-based.
+     */
+    public function cancelInvoiceByPost(string $uid): array;
 
     /**
      * Configure les credentials de l'API.

@@ -23,6 +23,7 @@ return [
         'verify' => env('SGMEF_VERIFY_SSL', true),
         'connect_timeout' => (int) env('SGMEF_CONNECT_TIMEOUT', 10),
     ],
+    'rate_limit_per_minute' => (int) env('SGMEF_RATE_LIMIT_PER_MINUTE', 60),
     'logging' => [
         'enabled' => env('SGMEF_LOGGING_ENABLED', true),
         'level' => env('SGMEF_LOG_LEVEL', 'info'),

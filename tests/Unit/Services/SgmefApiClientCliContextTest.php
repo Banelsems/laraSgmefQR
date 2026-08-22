@@ -30,7 +30,7 @@ class SgmefApiClientCliContextTest extends TestCase
         $this->apiClient = new SgmefApiClient(
             $this->httpClient,
             'https://test-api.example.com',
-            'test-token',
+            'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.abc123sign',
             ['timeout' => 30]
         );
     }
@@ -63,7 +63,7 @@ class SgmefApiClientCliContextTest extends TestCase
         $this->httpClient
             ->shouldReceive('withHeaders')
             ->with([
-                'Authorization' => 'Bearer test-token',
+                'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.abc123sign',
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])
