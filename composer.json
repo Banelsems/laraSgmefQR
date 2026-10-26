@@ -1,84 +1,84 @@
 {
-  "name": "banelsems/lara-sgmef-qr",
-  "description": "Universal Laravel package for Benin electronic invoicing (SGMEF API) - Works immediately without authentication dependencies. Clean Code architecture with modern web interface.",
-  "type": "library",
-  "keywords": [
-    "laravel",
-    "benin",
-    "sgmef",
-    "electronic-invoicing",
-    "qrcode",
-    "clean-code",
-    "solid",
-    "auth-independent",
-    "plug-and-play",
-    "universal-compatibility",
-    "taxation",
-    "africa"
-  ],
-  "homepage": "https://github.com/banelsems/lara-sgmef-qr",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "SEMASSOUSSI Banel Fajardy",
-      "email": "banelsemassoussi@gmail.com",
-      "homepage": "https://banelsems.com",
-      "role": "Developer"
+    "name": "banelsems/lara-sgmef-qr",
+    "description": "Universal Laravel package for Benin electronic invoicing (SGMEF API) - Works immediately without authentication dependencies. Clean Code architecture with modern web interface.",
+    "type": "library",
+    "keywords": [
+        "laravel",
+        "benin",
+        "sgmef",
+        "electronic-invoicing",
+        "qrcode",
+        "clean-code",
+        "solid",
+        "auth-independent",
+        "plug-and-play",
+        "universal-compatibility",
+        "taxation",
+        "africa"
+    ],
+    "homepage": "https://github.com/banelsems/lara-sgmef-qr",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "SEMASSOUSSI Banel Fajardy",
+            "email": "banelsemassoussi@gmail.com",
+            "homepage": "https://banelsems.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.1|^8.2|^8.3|^8.4|^8.5",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "bacon/bacon-qr-code": "^3.0",
+        "barryvdh/laravel-dompdf": "^3.1",
+        "guzzlehttp/guzzle": "^7.0",
+        "laravel/framework": "^10.0|^11.0|^12.0|^13.0",
+        "spatie/browsershot": "^5.0",
+        "spatie/laravel-data": "^4.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0|^11.0|^12.0",
+        "orchestra/testbench": "^8.0|^9.0|^10.0|^11.0",
+        "mockery/mockery": "^1.5",
+        "phpstan/phpstan": "^1.10",
+        "friendsofphp/php-cs-fixer": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Banelsems\\LaraSgmefQr\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Banelsems\\LaraSgmefQr\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Banelsems\\LaraSgmefQr\\Providers\\LaraSgmefQRServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html coverage",
+        "analyse": "phpstan analyse",
+        "cs-check": "php-cs-fixer fix --dry-run --diff",
+        "cs-fix": "php-cs-fixer fix"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "support": {
+        "issues": "https://github.com/banelsems/lara-sgmef-qr/issues",
+        "source": "https://github.com/banelsems/lara-sgmef-qr",
+        "docs": "https://github.com/banelsems/lara-sgmef-qr/wiki"
     }
-  ],
-  "require": {
-    "php": "^8.1|^8.2|^8.3|^8.4",
-    "ext-curl": "*",
-    "ext-json": "*",
-    "bacon/bacon-qr-code": "^3.0",
-    "barryvdh/laravel-dompdf": "^3.1",
-    "guzzlehttp/guzzle": "^7.0",
-    "laravel/framework": "^10.0|^11.0|^12.0|^13.0",
-    "spatie/browsershot": "^5.0",
-    "spatie/laravel-data": "^4.0"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^10.0|^11.0|^12.0",
-    "orchestra/testbench": "^8.0|^9.0|^10.0|^11.0",
-    "mockery/mockery": "^1.5",
-    "phpstan/phpstan": "^1.10",
-    "friendsofphp/php-cs-fixer": "^3.0"
-  },
-  "autoload": {
-    "psr-4": {
-      "Banelsems\\LaraSgmefQr\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Banelsems\\LaraSgmefQr\\Tests\\": "tests/"
-    }
-  },
-  "extra": {
-    "laravel": {
-      "providers": [
-        "Banelsems\\LaraSgmefQr\\Providers\\LaraSgmefQRServiceProvider"
-      ]
-    }
-  },
-  "scripts": {
-    "test": "phpunit",
-    "test-coverage": "phpunit --coverage-html coverage",
-    "analyse": "phpstan analyse",
-    "cs-check": "php-cs-fixer fix --dry-run --diff",
-    "cs-fix": "php-cs-fixer fix"
-  },
-  "config": {
-    "sort-packages": true,
-    "allow-plugins": {
-      "php-http/discovery": true
-    }
-  },
-  "minimum-stability": "stable",
-  "prefer-stable": true,
-  "support": {
-    "issues": "https://github.com/banelsems/lara-sgmef-qr/issues",
-    "source": "https://github.com/banelsems/lara-sgmef-qr",
-    "docs": "https://github.com/banelsems/lara-sgmef-qr/wiki"
-  }
 }
